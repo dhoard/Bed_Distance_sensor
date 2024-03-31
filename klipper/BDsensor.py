@@ -1014,7 +1014,8 @@ class BDsensorEndstopWrapper:
         self.bd_sensor.I2C_BD_send("1018")  # 1018// finish reading
         self.bd_sensor.I2C_BD_send("1018")
         self.collision_calibrating = 0
-
+        #self.toolhead.dwell(1)
+        #self.BD_read_calibration(gcmd)
     def BD_read_calibration(self, gcmd):
         self.bd_sensor.I2C_BD_send("1017")  # tart read raw calibrate data
         self.bd_sensor.I2C_BD_send("1017")
@@ -1024,7 +1025,7 @@ class BDsensorEndstopWrapper:
             pr = self.I2C_BD_receive_cmd.send([self.oid, "3".encode('utf-8')])
             intd = int(pr['response'])
             strd = str(intd)
-            gcmd.respond_raw(strd)
+            gcmd.respond_info("%d"%intd)
             if ncount1 <= 3 and intd > 500:
                 gcmd.respond_raw("BDSensor mounted too high!"
                                  "0.4mm to 2.4mm from BED at"
@@ -1034,7 +1035,7 @@ class BDsensorEndstopWrapper:
                 gcmd.respond_raw("BDSensor mounted too close! please mount"
                                  "the BDsensor 0.2~0.4mm higher")
             # break
-            self.toolhead.dwell(0.1)
+            self.toolhead.dwell(0.03)
             ncount1 = ncount1 + 1
             if ncount1 >= 40:
                 break
@@ -1258,8 +1259,9 @@ class BDsensorEndstopWrapper:
             return
         self.multi = 'FIRST'
 
-    def adjust_probe_up_down(self, up_steps, down_steps):
+    def adjust_probe_up_down(self, up_steps, down_steps, logd):
         homepos = self.toolhead.get_position()
+        time.sleep(0.03)
         pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
         intr = int(pr['response'])
         intr_old = intr
@@ -1270,13 +1272,13 @@ class BDsensorEndstopWrapper:
             homepos[2] += up_steps
             self.toolhead.manual_move([None, None, homepos[2]], 80)
             self.toolhead.wait_moves()
-            time.sleep(0.05)
+            time.sleep(0.03)
             pr = self.I2C_BD_receive_cmd.send([self.oid,
                                               "32".encode('utf-8')])
             raw_d = int(pr['response'])
             if (raw_d - intr) >= 10:
                 pos_old_1 = homepos[2]
-                homepos[2] -= up_steps
+                homepos[2] -= up_steps*1.5
                 self.toolhead.manual_move([None, None, homepos[2]], 80)
                 self.toolhead.wait_moves()
                 intr = raw_d
@@ -1289,13 +1291,13 @@ class BDsensorEndstopWrapper:
                                                       "32".encode('utf-8')])
                     raw_d = int(pr['response'])
                     homepos_n = self.toolhead.get_position()
-                    if (raw_d - intr) >= 4 or homepos[2] >= pos_old_1:
-                        
-                        self.gcode.respond_info("auto adjust Z axis +%.2fmm,"
+                    if (raw_d - intr) >= 3 or homepos[2] >= pos_old_1:
+                        if logd == 1:
+                            self.gcode.respond_info("auto adjust Z axis +%.2fmm,"
                                                 "raw data from %.1f to %.1f"
-                                                % (homepos_n[2]-pos_old,
+                                                % (homepos[2]-pos_old,
                                                    intr_old, raw_d))
-                        return homepos_n[2]-pos_old,raw_d-intr_old
+                        return homepos[2]-pos_old,raw_d-intr_old
                         break
                     intr = raw_d
                 break
@@ -1314,13 +1316,13 @@ class BDsensorEndstopWrapper:
             homepos[2] -= down_steps
             self.toolhead.manual_move([None, None, homepos[2]], 80)
             self.toolhead.wait_moves()
-            time.sleep(0.05)
+            time.sleep(0.03)
             pr = self.I2C_BD_receive_cmd.send([self.oid,
                                   "32".encode('utf-8')])
             raw_d = int(pr['response'])
            # self.gcode.respond_info("  %d "%raw_d)
             if (intr - raw_d) < 1 and raw_d < 500:
-                self.gcode.respond_info(" stop at %d "%raw_d)
+                #self.gcode.respond_info(" stop at %d "%raw_d)
                 break;
             intr = raw_d
 
@@ -1332,11 +1334,15 @@ class BDsensorEndstopWrapper:
         homepos = self.toolhead.get_position()
         self.bd_sensor.I2C_BD_send("1020")
         self.bd_sensor.I2C_BD_send("1020")
-        adj_z,adj_raw = self.adjust_probe_up_down(0.1,0.03)      
-        if adj_z <= 0.1 and adj_raw >= 6:
-            self.gcode.respond_info("triggered in air, adjusting")
+        adj_z,adj_raw = self.adjust_probe_up_down(0.1,0.02,0)      
+        #if adj_z <= 0.15: # and adj_raw >= 6:
+        
+        self.adjust_probe_down(0.1)
+        adj_z,adj_raw = self.adjust_probe_up_down(0.1,0.02,1) 
+        if adj_z <= 0.1: # and adj_raw >= 6:
+            self.gcode.respond_info("re-adjusting")
             self.adjust_probe_down(0.1)
-            adj_z,adj_raw = self.adjust_probe_up_down(0.1,0.03) 
+            adj_z,adj_raw = self.adjust_probe_up_down(0.1,0.02,1) 
         self.bd_value = self.BD_Sensor_Read(2)
         self.bd_sensor.I2C_BD_send("1018")
 
