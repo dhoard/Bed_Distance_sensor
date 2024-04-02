@@ -971,21 +971,29 @@ class BDsensorEndstopWrapper:
             self.gcode.run_script_from_command("G1 Z0")
         gcmd.respond_info("Calibrating, don't power off the printer")
         self.toolhead = self.printer.lookup_object('toolhead')
-        kin = self.toolhead.get_kinematics()
+       # kin = self.toolhead.get_kinematics()
+        self.bd_sensor.I2C_BD_send("1020")
+        self.bd_sensor.I2C_BD_send("1020")
+        pr = self.I2C_BD_receive_cmd.send([self.oid,
+                                            "32".encode('utf-8')])
+        raw_d = int(pr['response'])
+        if raw_d > 600 :
+            if raw_d == 1024:
+                raise self.printer.command_error("Unable to communicate with bdsensor,%d"%raw_d)
+            raise self.printer.command_error("BDsensor is too far from the bed:%d"%raw_d)
+        self.bd_sensor.I2C_BD_send("1018")
+        
         self.bd_sensor.I2C_BD_send("1019")
         self.bd_sensor.I2C_BD_send("1019")
-        # distance = 0.5#gcmd.get_float('DISTANCE')
-        speed = 5  # gcmd.get_float('VELOCITY', above=0.)
-        accel = 1000  # gcmd.get_float('ACCEL', 0., minval=0.)
-        for stepper in kin.get_steppers():
-            # if stepper.is_active_axis('z'):
-            self._force_enable(stepper)
-            self.toolhead.wait_moves()
-        ncount = 0
-        gcmd.respond_info("Please Wait... ")
         self.gcode.run_script_from_command("SET_KINEMATIC_POSITION Z=0")
+        curtime = self.printer.get_reactor().monotonic()
+        if 'z' not in self.toolhead.get_status(curtime)['homed_axes']:
+            raise self.printer.command_error("make sure [force_move]"
+                                            " enable_force_move: true # in the printer.cfg")
         self.toolhead.dwell(0.1)
+        gcmd.respond_info("Please Wait... ")
         z_pos = 0
+        ncount = 0
         while 1:
             z_pos += 0.1
             self.bd_sensor.I2C_BD_send(str(ncount))
@@ -1320,8 +1328,8 @@ class BDsensorEndstopWrapper:
             pr = self.I2C_BD_receive_cmd.send([self.oid,
                                   "32".encode('utf-8')])
             raw_d = int(pr['response'])
-           # self.gcode.respond_info("  %d "%raw_d)
-            if (intr - raw_d) < 1 and raw_d < 500:
+            #self.gcode.respond_info("  %d "%raw_d)
+            if (intr - raw_d) < 10 and raw_d < 500:
                 #self.gcode.respond_info(" stop at %d "%raw_d)
                 break;
             intr = raw_d
