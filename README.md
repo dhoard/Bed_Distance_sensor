@@ -11,11 +11,10 @@ Faster leveling, realtime compensation, high accuracy.
    
 3. Easy manual bed level adjustment thanks to ability to display the live sensor distance measurement on your screen.
 
-Sensor type: inductive, can only measure the metal plate.
+Sensor type: inductive, eddy, can only measure the metal plate.
 
 Range: 4mm (for different metal the range should be different, the normal pei steel plate is 4mm, but aluminum is about 2mm)
 
-Resolution:0.01mm
 
 ### Hardware:
 * It can connect to most motherboards or GPIOs on the RaspberryPi
