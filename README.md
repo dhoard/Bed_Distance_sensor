@@ -3,8 +3,6 @@
 [BDsensor](https://www.pandapi3d.com/bdsensor) is the first distance sensor that can work with 3D printer and do fast bed leveling and adjust z axis in real time.
 it can measure the bed distance at any point in real time without moving the z axis up and down.
 
- <img src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/new/doc/images/Connection1.jpg" width="600" /> 
-
 Faster leveling, realtime compensation, high accuracy.
 
 1. No need to do probe points before every print, it will be automatically compensated for based on actual distance in real time.
@@ -45,6 +43,16 @@ standby mode automatic while printing|:heavy_check_mark: | :heavy_check_mark:
 [KAMP](https://github.com/kyleisah/Klipper-Adaptive-Meshing-Purging) Adaptive Meshing & Purging |No | :heavy_check_mark: 
 nozzle collision sensing|Coming soon  | :heavy_check_mark: 
 
+### Benefit of Collision sensing
+####  * Auto z_offset calibration.
+####  * Overcome the temperature drift.
+Because the temperature drift only change the z offset, but does not change the bed mesh heightmap with BDsensor.that means the heightmap is the same even with different z_offset.
+
+### Benefit of version M:
+
+####  * It can work with High temperature chamber up to 150C
+####  * lightest/smallest probe sensor for 3d printer, 2.5g
+
 
 #### Installation: [Marlin](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor) | [Klipper](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper) 
 #### Mount STL:  [BLtouch_Compatible](https://www.thingiverse.com/thing:6098131) | [VzBoT](https://discord.com/channels/829828765512106054/1163237892957671424)
@@ -54,7 +62,7 @@ nozzle collision sensing|Coming soon  | :heavy_check_mark:
 [Project status](https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer)
 
 #### Where to buy:
- [pandapi3d.com](https://www.pandapi3d.com/bdsensor) , [淘宝店](https://item.taobao.com/item.htm?spm=a1z10.1-c.w4004-14344044600.5.60a16ff77NRBL5&id=684572042388)
+ [pandapi3d.com](https://www.pandapi3d.com) , [elecrow](https://www.elecrow.com/bd-sensor.html) , [淘宝店](https://item.taobao.com/item.htm?spm=a1z10.1-c.w4004-14344044600.5.60a16ff77NRBL5&id=684572042388)
 
  
 
