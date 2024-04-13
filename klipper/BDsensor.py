@@ -1311,7 +1311,7 @@ class BDsensorEndstopWrapper:
                                 temp, target = heaters.get_temp(self.printer.get_reactor().monotonic())
                             except Exception as e:
                                 pass
-                            self.gcode.respond_info("Collision: %.4f mm, Bed: %.1f°C"
+                            self.gcode.respond_info("Collision: %.4f mm, Bed: %.1fC"
                                                 % (raw_d*0.0035,temp))
                         return homepos[2]-pos_old,raw_d-intr_old
                         break

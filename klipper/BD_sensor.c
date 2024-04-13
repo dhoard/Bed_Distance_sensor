@@ -183,6 +183,7 @@ uint16_t BD_i2c_read(void)
         b <<= 1;
         ndelay_bd(delay_m);
         BD_setHigh(scl_gpio);
+		ndelay_bd(delay_m);
         if (gpio_in_read(sda_gpio_in))
             b |= 1;
         ndelay_bd(delay_m);
