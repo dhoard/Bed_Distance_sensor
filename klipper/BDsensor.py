@@ -1275,7 +1275,7 @@ class BDsensorEndstopWrapper:
         intr = int(pr['response'])
         intr_old = intr
         if intr > 720:
-            raise self.printer.command_error("triggered in air, %d, maybe need to increase the Z homing speed"%intr)
+            self.gcode.respond_info("warning: triggered in air, %d"%intr)
         pos_old = homepos[2]
         while 1:
             homepos[2] += up_steps
@@ -1326,7 +1326,7 @@ class BDsensorEndstopWrapper:
                                             "32".encode('utf-8')])
         raw_d = int(pr['response'])
         intr = raw_d
-        homepos[2] = 4
+        homepos[2] = 5
         self.toolhead.set_position(homepos)
         while 1:
             homepos[2] -= down_steps
