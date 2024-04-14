@@ -776,12 +776,14 @@ class BDsensorEndstopWrapper:
 
         # Register commands
         self.gcode = self.printer.lookup_object('gcode')
-        self.gcode.register_command('M102', self.cmd_M102)
-        self.gcode.register_command('BDSENSOR_VERSION', self.BD_version)
-        self.gcode.register_command('BDSENSOR_CALIBRATE', self.BD_calibrate)
-        self.gcode.register_command('BDSENSOR_READ_CALIBRATION', self.BD_read_calibration)
-        self.gcode.register_command('BDSENSOR_DISTANCE', self.bd_distance)
-        self.gcode.register_command('BDSENSOR_SET', self.bd_set)
+        self.width_filament = config.getint('width_filament', 0)
+        if self.width_filament == 0:
+            self.gcode.register_command('M102', self.cmd_M102)
+            self.gcode.register_command('BDSENSOR_VERSION', self.BD_version)
+            self.gcode.register_command('BDSENSOR_CALIBRATE', self.BD_calibrate)
+            self.gcode.register_command('BDSENSOR_READ_CALIBRATION', self.BD_read_calibration)
+            self.gcode.register_command('BDSENSOR_DISTANCE', self.bd_distance)
+            self.gcode.register_command('BDSENSOR_SET', self.bd_set)
 
         self.I2C_BD_receive_cmd2 = None
         self.gcode_move = self.printer.load_object(config, "gcode_move")
