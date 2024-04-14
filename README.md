@@ -50,7 +50,7 @@ Because the temperature drift only change the z offset, but does not change the 
 ### Benefit of version M:
 
 ####  * It can work with High temperature chamber up to 150C
-####  * lightest/smallest probe sensor for 3d printer, 2.5g
+####  * lightest/smallest probe sensor for 3d printer, 1.5g
 
 
 #### Installation: [Marlin](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor) | [Klipper](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper) 
