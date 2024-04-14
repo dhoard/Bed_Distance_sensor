@@ -1285,7 +1285,7 @@ class BDsensorEndstopWrapper:
             pr = self.I2C_BD_receive_cmd.send([self.oid,
                                               "32".encode('utf-8')])
             raw_d = int(pr['response'])
-            if (raw_d - intr) >= (up_steps*100*1.5):
+            if (raw_d - intr) >= (up_steps*100*2):
                 if second_steps == 0:
                     break
                 pos_old_1 = homepos[2]
@@ -1302,7 +1302,7 @@ class BDsensorEndstopWrapper:
                                                       "32".encode('utf-8')])
                     raw_d = int(pr['response'])
                     homepos_n = self.toolhead.get_position()
-                    if (raw_d - intr) >= (second_steps*100*1.5) or homepos[2] >= pos_old_1:
+                    if (raw_d - intr) >= (second_steps*100*2) or homepos[2] >= pos_old_1:
                         if logd == 1:
                             temp = 0
                             try:
@@ -1312,7 +1312,7 @@ class BDsensorEndstopWrapper:
                             except Exception as e:
                                 pass
                             self.gcode.respond_info("Collision: %.4f mm, Bed: %.1fC"
-                                                % (raw_d*0.0035,temp))
+                                                % (raw_d*0.004,temp))
                         return homepos[2]-pos_old,raw_d-intr_old
                         break
                     intr = raw_d
@@ -1354,7 +1354,11 @@ class BDsensorEndstopWrapper:
         #if adj_z <= 0.15: # and adj_raw >= 6:
         
         self.adjust_probe_down(0.1)
-        adj_z,adj_raw = self.adjust_probe_up(0.05,0.01,1) 
+        adj_z,adj_raw = self.adjust_probe_up(0.05,0.01,0) 
+        
+        self.adjust_probe_down(0.05)
+        adj_z,adj_raw = self.adjust_probe_up(0.05,0.005,1) 
+        
         #if adj_z <= 0.1: # and adj_raw >= 6:
         #    self.gcode.respond_info("re-adjusting")
         #    self.adjust_probe_down(0.1)
@@ -1400,8 +1404,8 @@ class BDsensorEndstopWrapper:
                 homepos[2] = self.bd_value
                 self.toolhead.set_position(homepos)
             # time.sleep(0.1)
-            #self.gcode.respond_info("Z triggered at %.3f mm,auto adjusted."
-            #                        % self.bd_value)
+            self.gcode.respond_info("Z triggered at %.3f mm,auto adjusted."
+                                    % self.bd_value)
         self.homeing = 0
         if self.stow_on_each_sample:
             return
