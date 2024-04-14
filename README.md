@@ -49,7 +49,7 @@ Because the temperature drift only change the z offset, but does not change the 
 
 ### Benefit of version M:
 
-####  * It can work with High temperature chamber up to 150C
+####  * It can work with High temperature chamber up to 120C
 ####  * lightest/smallest probe sensor for 3d printer, 1.5g
 
 
