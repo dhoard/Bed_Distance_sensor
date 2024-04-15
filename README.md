@@ -54,7 +54,7 @@ Because the temperature drift only change the z offset, but does not change the 
 
 
 #### Installation: [Marlin](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor) | [Klipper](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper) 
-#### Mount STL:  [BLtouch_Compatible](https://www.thingiverse.com/thing:6098131) | [VzBoT](https://discord.com/channels/829828765512106054/1163237892957671424)
+#### Mount STL:  [BLtouch_Compatible](https://www.thingiverse.com/thing:6098131) | [VzBoT](https://discord.com/channels/829828765512106054/1163237892957671424) | [Stealthburner Voron](https://www.printables.com/model/831679-lazy-bd-sensor-adapter-for-stealthburner-voron)
 
 #### Test Video: [RealTime adjust test ](https://www.youtube.com/watch?v=yx8pluEu0sg)| [JY-310 3D printer](https://www.youtube.com/clip/UgkxrPdIjlBsYOzUNraIL7HPizCh1WwQllYl) |[VzBot Test video](https://www.youtube.com/watch?v=zmtMjwy1y7U) | [Chris's Basement](https://youtu.be/VDOYYskbxV8?si=JiqrQFHsZcs2zIcD)
  
