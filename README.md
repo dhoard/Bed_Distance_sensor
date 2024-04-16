@@ -45,8 +45,9 @@ nozzle collision sensing|Coming soon  | :heavy_check_mark:
 ### Benefit of Collision sensing
 ####  * Auto z_offset calibration.
 ####  * Overcome the temperature drift.
-Because the temperature drift only change the z offset, but does not change the bed mesh heightmap with BDsensor.that means the heightmap is the same even with different z_offset.
-
+The temperature drift will only change the z_offset, rise or low the bed mesh, but does not change the bed mesh with this BDsensor. that means the bed mesh is the same even with different temperature.
+####  * Repeatability: +/-0.005mm
+     
 ### Benefit of version M:
 
 ####  * It can work with High temperature chamber up to 120C
