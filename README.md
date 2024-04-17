@@ -44,8 +44,8 @@ nozzle collision sensing|Coming soon  | :heavy_check_mark:
 
 ### Benefit of Collision sensing
 1.  **Auto z offset calibration**.
-2.  [**Overcome the temperature drift**](https://www.pandapi3d.com/post/nozzle-collision-sensing-with-bdsensor).
-     The temperature drift will only change the z_offset, rise or low the bed mesh, but does not change the bed mesh with this BDsensor. that means the bed mesh is the same even with different temperature.
+2.  **Overcome the temperature drift**.
+     The temperature drift will only change the z_offset, it will rise or low the whole bed mesh, but does not change the bed mesh with this BDsensor. that means the bed mesh is the same even with [different temperature](https://www.pandapi3d.com/post/nozzle-collision-sensing-with-bdsensor).
 3. Repeatability: **+/-0.005mm**
 4. No external hardware and easy to adjust
 
