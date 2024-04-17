@@ -43,15 +43,16 @@ standby mode automatic while printing|:heavy_check_mark: | :heavy_check_mark:
 nozzle collision sensing|Coming soon  | :heavy_check_mark: 
 
 ### Benefit of Collision sensing
-####  * Auto z_offset calibration.
-####  * Overcome the temperature drift.
-The temperature drift will only change the z_offset, rise or low the bed mesh, but does not change the bed mesh with this BDsensor. that means the bed mesh is the same even with different temperature.
-####  * Repeatability: +/-0.005mm
-     
-### Benefit of version M:
+1.  **Auto z offset calibration**.
+2.  [**Overcome the temperature drift**](https://www.pandapi3d.com/post/nozzle-collision-sensing-with-bdsensor).
+     The temperature drift will only change the z_offset, rise or low the bed mesh, but does not change the bed mesh with this BDsensor. that means the bed mesh is the same even with different temperature.
+3. Repeatability: **+/-0.005mm**
+4. No external hardware and easy to adjust
 
-####  * It can work with High temperature chamber up to 120C
-####  * lightest/smallest probe sensor for 3d printer, 1.5g
+### Benefit of [version M](https://github.com/markniu/Bed_Distance_sensor/wiki/BDsensor-M):
+
+1.  For High temperature chamber up to 120C
+2.  The lightest probe, 1.5g
 
 
 #### Installation: [Marlin](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor) | [Klipper](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper) 
