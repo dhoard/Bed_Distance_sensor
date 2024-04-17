@@ -49,9 +49,9 @@ nozzle collision sensing|Coming soon  | :heavy_check_mark:
 3. Repeatability: **+/-0.005mm**
 4. No external hardware and easy to adjust
 
-### Benefit of [version M](https://github.com/markniu/Bed_Distance_sensor/wiki/BDsensor-M):
+### Benefit of version M:
 
-1.  For High temperature chamber up to 120C
+1.  For High temperature chamber up to [120C](https://github.com/markniu/Bed_Distance_sensor/wiki/BDsensor-M)
 2.  The lightest probe, 1.5g
 
 
