@@ -60,7 +60,7 @@ nozzle collision sensing|Coming soon  | :heavy_check_mark:
 
 #### Test Video: [RealTime adjust test ](https://www.youtube.com/watch?v=yx8pluEu0sg)| [JY-310 3D printer](https://www.youtube.com/clip/UgkxrPdIjlBsYOzUNraIL7HPizCh1WwQllYl) |[VzBot Test video](https://www.youtube.com/watch?v=zmtMjwy1y7U) | [Chris's Basement](https://youtu.be/VDOYYskbxV8?si=JiqrQFHsZcs2zIcD)
  
-[Project status](https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer)
+[Project status](https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer), [facebook group](https://www.facebook.com/groups/380795976169477)
 
 #### Where to buy:
  [pandapi3d.com](https://www.pandapi3d.com) , [elecrow](https://www.elecrow.com/bd-sensor.html) , [淘宝店](https://item.taobao.com/item.htm?spm=a1z10.1-c.w4004-14344044600.5.60a16ff77NRBL5&id=684572042388)
