@@ -35,6 +35,7 @@ class WidthSensorBDsensor:
         self.is_active =config.getboolean('enable', False)
         self.runout_dia_min = config.getfloat('min_diameter', 1.0)
         self.runout_dia_max = config.getfloat('max_diameter', self.max_diameter)
+        self.is_log =config.getboolean('logging', False)
         self.is_active = False #config.getboolean('enable', False)
         self.extrude_factor_update_timer = self.reactor.register_timer(
             self.extrude_factor_update_event)
@@ -89,7 +90,7 @@ class WidthSensorBDsensor:
 
     def update_filament_array(self, last_epos):
 
-        self.diameter = self.bdsensor.BD_Sensor_Read(2)
+        self.diameter = self.bdsensor.BD_Sensor_Read(1)
         self.gcode.respond_info("Filament width:%.3f" %
                                 (self.diameter))
         # Fill array

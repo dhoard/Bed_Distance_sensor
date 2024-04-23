@@ -788,7 +788,7 @@ class BDsensorEndstopWrapper:
         self.I2C_BD_receive_cmd2 = None
         self.gcode_move = self.printer.load_object(config, "gcode_move")
         self.gcode = self.printer.lookup_object('gcode')
-        self.bedmesh = self.printer.lookup_object('bed_mesh', None)
+        self.bedmesh = self.printer.lookup_object('bed_mesh')
         # Wrappers
         self.bd_value = 10.24
         self.results = []
