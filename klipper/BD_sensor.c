@@ -372,9 +372,9 @@ static uint_fast8_t bd_event(struct timer *t)
 	 }
 	 
      if(e.sample_count || (step_adj[0].cur_z>step_adj[0].adj_z_range))
-	 	timer_ilde = timer_ilde*10;
+	 	timer_ilde = timer_ilde*6;
 	 bd_tim.time.waketime =timer_read_time() + timer_ilde;
-	 if(diff_step) 	
+	 if(diff_step)
 	 	bd_tim.time.waketime =timer_read_time()+timer_from_us(300);
    irq_enable(); 
    return SF_RESCHEDULE;

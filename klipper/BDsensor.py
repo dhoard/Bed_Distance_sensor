@@ -11,7 +11,7 @@ from threading import Timer
 from mcu import MCU, MCU_trsync
 from . import manual_probe
 from . import probe
-
+BD_TIMER = 0.600
 TRSYNC_TIMEOUT = 0.025
 TRSYNC_SINGLE_MCU_TIMEOUT = 0.250
 
@@ -711,6 +711,8 @@ class BDsensorEndstopWrapper:
 
         self.collision_calibrating = 0
         self.switch_mode = 0
+        self.printer.register_event_handler("stepper_enable:motor_off",
+                                            self.event_motor_off)                                    
         ppins = self.printer.lookup_object('pins')
         # self.mcu_pwm = ppins.setup_pin('pwm', config.get('scl_pin'))
         self.bdversion = ''
@@ -800,6 +802,9 @@ class BDsensorEndstopWrapper:
         self.old_count = 1000
         self.homeing = 0
         self.reactor = self.printer.get_reactor()
+        self.bd_update_timer = self.reactor.register_timer(
+            self.bd_update_event)
+        self.reactor.update_timer(self.bd_update_timer, self.reactor.NOW)
         self.status_dis = None
         # try:
         # self.status_dis=self.printer.lookup_object('display_status')
@@ -902,6 +907,37 @@ class BDsensorEndstopWrapper:
         hgt=hgt*1000 
         pr=self.Z_Move_Live_cmd.send([self.oid, ("1 %d\0"
                     % hgt).encode('utf-8')])
+    def event_motor_off(self,print_time):
+        self.BD_real_time(0)
+    def bd_update_event(self, eventtime):
+      #  if self.gcode_que is not None:
+     #       self.process_M102(self.gcode_que)
+     #       self.gcode_que=None
+   #     strd=str(self.bd_value)+"mm"
+  #      status_dis=self.printer.lookup_object('display_status')
+  #      if status_dis is not None:
+  #          if self.bd_value == 10.24:
+   #             strd="BDs:ConnectErr"
+   #         if self.bd_value == 3.9:
+   #             strd="BDs:Out Range"
+   #         status_dis.message=strd
+        z=self.gcode_move.last_position[2] - self.gcode_move.base_position[2]
+        if self.z_last != z  and self.homeing==0:
+            self.z_last = z 
+            #self.bd_sensor.I2C_BD_send("1022")
+            #step_time=100
+            self.toolhead = self.printer.lookup_object('toolhead')
+            kin = self.toolhead.get_kinematics()
+            #z_index = 0
+            for stepper in kin.get_steppers():
+                if stepper.is_active_axis('z'):
+                    #z=self.gcode_move.last_position[2]
+                    #stepper._query_mcu_position()
+                    self.bd_set_aj_len(z)
+                    self.gcode.respond_info("current z:%f" % z)
+                    break
+            #self.bd_sensor.I2C_BD_send("1018")
+        return eventtime + BD_TIMER
     def cmd_M102(self, gcmd, wait=False):
         # self.gcode_que=gcmd
         self.process_M102(gcmd)
@@ -1121,7 +1157,8 @@ class BDsensorEndstopWrapper:
             BD_height = 0
         self.gcode.respond_info("Real time leveling height:%f  "%BD_height)      
         self.adjust_range = int((BD_height+0.01)*1000)
-        self.bd_sensor.I2C_BD_send("1022")
+      #  self.bd_sensor.I2C_BD_send("1022")
+        self.bd_sensor.I2C_BD_send("1018") 
        # step_time=100
         self.toolhead = self.printer.lookup_object('toolhead')
         kin = self.toolhead.get_kinematics()
