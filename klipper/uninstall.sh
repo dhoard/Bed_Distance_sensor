@@ -21,6 +21,9 @@ rm "${HOME_DIR}/src/BD_sensor.c"
 
 sed -i '/src-y += BD_sensor.c/d' "${HOME_DIR}/src/Makefile"
 
+cd "$HOME_DIR"
+git checkout "${HOME_DIR}/scripts/buildcommands.py"
+
 echo ""
 echo "Uninstalled Bed Distance Sensor successful :) "
 echo ""
