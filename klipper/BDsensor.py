@@ -822,6 +822,11 @@ class BDsensorEndstopWrapper:
             oid=self.oid,
             cq=self.cmd_queue
         )
+        self.Z_Move_Live_cmd = self.mcu.lookup_query_command(
+               "Z_Move_Live oid=%c data=%*s",
+               "Z_Move_Live_response oid=%c return_set=%*s",
+               oid=self.oid, cq=self.cmd_queue)
+
         self.mcu.register_response(self._handle_BD_Update,
                                    "BD_Update", self.bd_sensor.oid)
         self.mcu.register_response(self.handle_probe_Update,
@@ -893,6 +898,10 @@ class BDsensorEndstopWrapper:
         self.toolhead.note_kinematic_activity(print_time)
         self.toolhead.dwell(accel_t + cruise_t + accel_t)
 
+    def bd_set_aj_len(self, hgt):
+        hgt=hgt*1000 
+        pr=self.Z_Move_Live_cmd.send([self.oid, ("1 %d\0"
+                    % hgt).encode('utf-8')])
     def cmd_M102(self, gcmd, wait=False):
         # self.gcode_que=gcmd
         self.process_M102(gcmd)
@@ -1093,7 +1102,7 @@ class BDsensorEndstopWrapper:
 
         cmd_bd = gcmd.get_float('REAL_TIME_HEIGHT', None)
         try:
-            self.bd_real_time(cmd_bd)
+            self.BD_real_time(cmd_bd)
         except Exception as e:
             pass
         cmd_bd = gcmd.get_int('NO_STOP_PROBE', None)
@@ -1105,8 +1114,41 @@ class BDsensorEndstopWrapper:
         except Exception as e:
             pass
 
-    def bd_real_time(self, bd_height):
-        #  real time level still in beta version
+    def BD_real_time(self, BD_height): 
+        if BD_height >= 3.0:
+            BD_height = 3
+        elif BD_height < 0.0:
+            BD_height = 0
+        self.gcode.respond_info("Real time leveling height:%f  "%BD_height)      
+        self.adjust_range = int((BD_height+0.01)*1000)
+        self.bd_sensor.I2C_BD_send("1022")
+       # step_time=100
+        self.toolhead = self.printer.lookup_object('toolhead')
+        kin = self.toolhead.get_kinematics()
+        z_index = 0
+        for stepper in kin.get_steppers():
+         if stepper.is_active_axis('z'):
+             steps_per_mm = 1.0/stepper.get_step_dist()
+             z=self.gcode_move.last_position[2]
+             stepper._query_mcu_position()
+             invert_dir, orig_invert_dir = stepper.get_dir_inverted()
+             z=int(z*1000)
+             #print("z step_at_zero:%d"% z)
+             pr=self.Z_Move_Live_cmd.send([self.oid, ("0 %d\0"
+                 % z_index).encode('utf-8')])
+             pr=self.Z_Move_Live_cmd.send([self.oid, ("1 %d\0"
+                 % z).encode('utf-8')])
+             pr=self.Z_Move_Live_cmd.send([self.oid, ("2 %u\0"
+                 % self.adjust_range).encode('utf-8')])
+             pr=self.Z_Move_Live_cmd.send([self.oid, ("3 %u\0"
+                 % orig_invert_dir).encode('utf-8')])
+             pr=self.Z_Move_Live_cmd.send([self.oid, ("4 %u\0"
+                 % steps_per_mm).encode('utf-8')])
+             #pr=self.Z_Move_Live_cmd.send([self.oid, ("5 %u\0"
+             #    % step_time).encode('utf-8')])
+             pr=self.Z_Move_Live_cmd.send([self.oid, ("6 %u\0"
+                 % stepper.get_oid()).encode('utf-8')])
+             z_index = z_index + 1
         self.bd_sensor.I2C_BD_send("1018")  # 1018 finish reading
 
     def process_M102(self, gcmd):
@@ -1202,6 +1244,7 @@ class BDsensorEndstopWrapper:
         else:
             sample_time = .03
             sample_count = 1
+
         clock = self.mcu_endstop.print_time_to_clock(print_time)
         rest_ticks = \
             self.mcu_endstop.print_time_to_clock(print_time+rest_time) - clock
@@ -1406,8 +1449,8 @@ class BDsensorEndstopWrapper:
                 homepos[2] = self.bd_value
                 self.toolhead.set_position(homepos)
             # time.sleep(0.1)
-            self.gcode.respond_info("Z triggered at %.3f mm,auto adjusted."
-                                    % self.bd_value)
+            #self.gcode.respond_info("Z triggered at %.3f mm,auto adjusted."
+            #                        % self.bd_value)
         self.homeing = 0
         if self.stow_on_each_sample:
             return
