@@ -102,6 +102,9 @@ command_config_stepper(uint32_t *args);
 void adust_Z_live(uint16_t sensor_z);
 void BD_i2c_write(unsigned int addr);
 uint16_t BD_i2c_read(void);
+void adust_Z_calc(uint16_t sensor_z);
+void timer_bd_init(void);
+
 
 int BD_i2c_init(uint32_t _sda,uint32_t _scl,
     uint32_t delays,uint32_t h_pose,int z_adjust)
