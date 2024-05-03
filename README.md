@@ -54,13 +54,15 @@ nozzle collision sensing|Coming soon  | :heavy_check_mark:
 1.  For High temperature chamber up to [120C](https://github.com/markniu/Bed_Distance_sensor/wiki/BDsensor-M)
 2.  The lightest probe, 1.5g
 
+### Document  : [WiKi](https://github.com/markniu/Bed_Distance_sensor/wiki)
 
-#### Installation: [Marlin](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor) | [Klipper](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper) 
+[History](https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer)
+
 #### Mount STL:  [BLtouch_Compatible](https://www.thingiverse.com/thing:6098131) | [VzBoT](https://discord.com/channels/829828765512106054/1163237892957671424) | [Stealthburner Voron](https://www.printables.com/model/831679-lazy-bd-sensor-adapter-for-stealthburner-voron)
 
-#### Test Video: [RealTime adjust test ](https://www.youtube.com/watch?v=yx8pluEu0sg)| [JY-310 3D printer](https://www.youtube.com/clip/UgkxrPdIjlBsYOzUNraIL7HPizCh1WwQllYl) |[VzBot Test video](https://www.youtube.com/watch?v=zmtMjwy1y7U) | [Chris's Basement](https://youtu.be/VDOYYskbxV8?si=JiqrQFHsZcs2zIcD)
- 
-[Project status](https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer), [facebook group](https://www.facebook.com/groups/380795976169477)
+### Support
+ https://www.facebook.com/groups/380795976169477
+
 
 #### Where to buy:
  [pandapi3d.com](https://www.pandapi3d.com) , [elecrow](https://www.elecrow.com/bd-sensor.html) , [淘宝店](https://item.taobao.com/item.htm?spm=a1z10.1-c.w4004-14344044600.5.60a16ff77NRBL5&id=684572042388)
