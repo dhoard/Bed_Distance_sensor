@@ -368,13 +368,13 @@ static uint_fast8_t bd_event(struct timer *t)
 				BD_Data=0;
 		 }
 	 }
-	 if(diff_step)
-	 	bd_tim.time.waketime =timer_read_time()+timer_from_us(300);
+	 
 
      if(e.sample_count || (step_adj[0].cur_z>step_adj[0].adj_z_range) || step_adj[0].adj_z_range==0)
 	 	timer_ilde = timer_ilde*10;
 	 bd_tim.time.waketime =timer_read_time() + timer_ilde;
-
+     if(diff_step)
+	 	bd_tim.time.waketime =timer_read_time()+timer_from_us(300);
    irq_enable(); 
    return SF_RESCHEDULE;
 }
@@ -434,7 +434,7 @@ void adust_Z_calc(uint16_t sensor_z)
 		
 	}
 	
-    output("Z_Move_L mcuoid=%c diff_step=%c sen_z=%c dir=%c cur_z=%c", oid_g,diff_step>0?diff_step:-diff_step,sensor_z,dir,step_adj[0].cur_z);
+    //output("Z_Move_L mcuoid=%c diff_step=%c sen_z=%c dir=%c cur_z=%c", oid_g,diff_step>0?diff_step:-diff_step,sensor_z,dir,step_adj[0].cur_z);
 	////////////////////////
 	return;
 
