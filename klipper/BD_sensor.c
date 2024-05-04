@@ -256,6 +256,10 @@ uint16_t BD_i2c_read(void)
     }
     else
         b=DATA_ERROR;
+ #if 0
+    sda_gpio_in=gpio_in_setup(sda_pin,0);
+    b=gpio_in_read(sda_gpio_in)*100;
+ #endif
     return b;
 }
 
@@ -344,16 +348,14 @@ static uint_fast8_t bd_event(struct timer *t)
      }
 	 else {
 		if (BD_read_flag == 1018 && (sda_pin >= 0) && (scl_pin >= 0) &&
-		 	((step_adj[0].zoid&&(step_adj[0].cur_z<step_adj[0].adj_z_range))||e.sample_count)){
-		 	 
-	        if(step_adj[0].zoid && (e.sample_count == 0)){
-           		struct stepper *s = stepper_oid_lookup_bd(step_adj[0].zoid);
-				if(s->count){
-					bd_tim.time.waketime =timer_read_time() + timer_ilde;
-					irq_enable(); 
-					return SF_RESCHEDULE;
-				}
-	        }
+		 	(step_adj[0].zoid&&(step_adj[0].cur_z<step_adj[0].adj_z_range)&&e.sample_count==0)){
+
+           	struct stepper *s = stepper_oid_lookup_bd(step_adj[0].zoid);
+			if(s->count){
+				bd_tim.time.waketime =timer_read_time() + timer_ilde;
+				irq_enable();
+				return SF_RESCHEDULE;
+			}
 			uint16_t tm=BD_i2c_read();
 			if(tm<1023){
 				BD_Data=tm;
@@ -363,19 +365,16 @@ static uint_fast8_t bd_event(struct timer *t)
 				}
 			}
 			else
-				BD_Data=0;				
-			
-			if(BD_Data<=homing_pose && e.sample_count){
-				BD_Data=0;				
-			}
+				BD_Data=0;
 		 }
 	 }
-	 
-     if(e.sample_count || (step_adj[0].cur_z>step_adj[0].adj_z_range))
-	 	timer_ilde = timer_ilde*6;
-	 bd_tim.time.waketime =timer_read_time() + timer_ilde;
 	 if(diff_step)
 	 	bd_tim.time.waketime =timer_read_time()+timer_from_us(300);
+
+     if(e.sample_count || (step_adj[0].cur_z>step_adj[0].adj_z_range) || step_adj[0].adj_z_range==0)
+	 	timer_ilde = timer_ilde*10;
+	 bd_tim.time.waketime =timer_read_time() + timer_ilde;
+
    irq_enable(); 
    return SF_RESCHEDULE;
 }

@@ -288,7 +288,8 @@ class BDPrinterProbe:
             try:
                 if ((self.mcu_probe.bd_sensor is not None) and
                         (("BED_MESH_CALIBRATE" in gcmd.get_command()) or
-                         ("QUAD_GANTRY_LEVEL" in gcmd.get_command()))):
+                         ("QUAD_GANTRY_LEVEL" in gcmd.get_command()
+                         and self.mcu_probe.quad_gantry_level_probe == 0))):
                     # pos = self._probe(speed)
                     toolhead.wait_moves()
                     time.sleep(0.004)
@@ -701,6 +702,7 @@ class BDsensorEndstopWrapper:
         self.no_stop_probe = config.get('no_stop_probe', None)
         self.collision_homing = config.getint('collision_homing', 0)
         self.collision_calibrate = config.getint('collision_calibrate', 0)
+        self.quad_gantry_level_probe = config.getint('quad_gantry_level_probe', 0)
 
         gcode_macro = self.printer.load_object(config,
                                                'gcode_macro')
@@ -910,19 +912,8 @@ class BDsensorEndstopWrapper:
     def event_motor_off(self,print_time):
         self.BD_real_time(0)
     def bd_update_event(self, eventtime):
-      #  if self.gcode_que is not None:
-     #       self.process_M102(self.gcode_que)
-     #       self.gcode_que=None
-   #     strd=str(self.bd_value)+"mm"
-  #      status_dis=self.printer.lookup_object('display_status')
-  #      if status_dis is not None:
-  #          if self.bd_value == 10.24:
-   #             strd="BDs:ConnectErr"
-   #         if self.bd_value == 3.9:
-   #             strd="BDs:Out Range"
-   #         status_dis.message=strd
         z=self.gcode_move.last_position[2] - self.gcode_move.base_position[2]
-        if self.z_last != z  and self.homeing==0:
+        if self.z_last != z  and self.homeing == 0:
             self.z_last = z 
             #self.bd_sensor.I2C_BD_send("1022")
             #step_time=100
