@@ -78,7 +78,6 @@ struct step_adjust{
     int steps_per_mm;
     int step_time;
     int zoid;//oid for all the z stepper
-    int dir_now;
 };
 
 #define NUM_Z_MOTOR  6
@@ -102,7 +101,8 @@ command_config_stepper(uint32_t *args);
 void adust_Z_live(uint16_t sensor_z);
 void BD_i2c_write(unsigned int addr);
 uint16_t BD_i2c_read(void);
-void adust_Z_calc(uint16_t sensor_z);
+void adust_Z_calc(uint16_t sensor_z,struct stepper *s);
+
 void timer_bd_init(void);
 
 
@@ -209,7 +209,7 @@ void BD_I2C_start(void)
 
 void  BD_i2c_stop(void)
 {
-    ndelay_bd(delay_m);
+ //   ndelay_bd(delay_m);
     sda_gpio=gpio_out_setup(sda_pin, 1);
     BD_setLow(sda_gpio);
     ndelay_bd(delay_m);
@@ -218,7 +218,7 @@ void  BD_i2c_stop(void)
     ndelay_bd(delay_m);
 
     BD_setHigh(sda_gpio);
-    ndelay_bd(delay_m);
+   // ndelay_bd(delay_m);
 }
 
 uint16_t BD_i2c_read(void)
@@ -239,9 +239,9 @@ uint16_t BD_i2c_read(void)
         ndelay_bd(delay_m);
         BD_setHigh(scl_gpio);
 		ndelay_bd(delay_m);
-        if (gpio_in_read(sda_gpio_in))
-            b |= 1;
-        ndelay_bd(delay_m);
+       // if (gpio_in_read(sda_gpio_in))
+        b |= gpio_in_read(sda_gpio_in);
+      //  ndelay_bd(delay_m);
         BD_setLow(scl_gpio);
     }
     BD_i2c_stop();
@@ -300,23 +300,27 @@ stepper_oid_lookup_bd(uint8_t oid)
 void adjust_z_move(void)
 {
 	struct stepper *s = stepper_oid_lookup_bd(step_adj[0].zoid);
+	int dir=0;//down
 	if(s->count){
 		//diff_step = 0;
 		return;
 	}
-	if(diff_step>0)
+		
+	if(diff_step>0){
 		diff_step--;
-	else
+	}
+	else{
 		diff_step++;
+		dir=1;
+	}
 	for(int i=0;i<NUM_Z_MOTOR;i++){
 		if(step_adj[i].zoid==0)
 			continue;
-		
 		s = stepper_oid_lookup_bd(step_adj[i].zoid);
-		//s->flags |=SF_LAST_DIR;
-		//s->flags &=(~SF_NEXT_DIR);
+		if(step_adj[i].invert_dir==1)
+			dir=!dir;
 
-		if(!!(s->flags&SF_LAST_DIR) != step_adj[0].dir_now){
+		if(!!(s->flags&SF_LAST_DIR) != dir){
 			gpio_out_toggle_noirq(s->dir_pin);
 		    gpio_out_toggle_noirq(s->step_pin);
 			gpio_out_toggle_noirq(s->dir_pin);
@@ -360,7 +364,7 @@ static uint_fast8_t bd_event(struct timer *t)
 			if(tm<1023){
 				BD_Data=tm;
 				{	
-					adust_Z_calc(sensor_z_old);
+					adust_Z_calc(sensor_z_old,s);
 					sensor_z_old = BD_Data;
 				}
 			}
@@ -387,11 +391,9 @@ void timer_bd_init(void)
     sched_add_timer(&bd_tim.time);
 }
 
-void adust_Z_calc(uint16_t sensor_z)
+void adust_Z_calc(uint16_t sensor_z,struct stepper *s)
 {
-   // BD_Data
-    int i=0;
-  
+   // BD_Data  
     if(step_adj[0].zoid==0 || step_adj[0].adj_z_range<=0 
 		|| (step_adj[0].cur_z>step_adj[0].adj_z_range)
 		|| (sensor_z>=300)||BD_read_flag!=1018){
@@ -400,40 +402,12 @@ void adust_Z_calc(uint16_t sensor_z)
     	return;
 	}
 	
-    struct stepper *s = stepper_oid_lookup_bd(step_adj[0].zoid);
 	if(s->count){
 		//diff_step = 0;
 		return;
 	}
-    float diff_mm = (sensor_z/100.0 - step_adj[0].cur_z/1000.0);
-    diff_step = diff_mm * step_adj[0].steps_per_mm;
-	if(abs_bd(diff_mm,0) < 0.05)
-		diff_step = 0;
-	if(diff_step>0 &&diff_step_old&& (abs_bd(diff_step,diff_step_old)<=0.05)){
-		diff_step_old = diff_step;
-		diff_step = step_adj[0].cur_z*step_adj[0].steps_per_mm/1000;
-	     
-	}
-	if (diff_mm >= 0.0 )
-		diff_step =diff_step/4;
-	diff_step_old = diff_step;
-    int dir=0;
-    
-	for(i=0;i<NUM_Z_MOTOR;i++){
-		if(step_adj[i].zoid==0)
-			continue;
-		dir=0;//down
-		if(diff_step<0){//up
-			dir=1;
-		}
-		if(step_adj[i].invert_dir==1)
-			dir=!dir;
-	    step_adj[0].dir_now = dir;
-
-		s = stepper_oid_lookup_bd(step_adj[i].zoid);
-		
-	}
-	
+    int diff_mm = (sensor_z*10 - step_adj[0].cur_z);
+    diff_step = diff_mm * step_adj[0].steps_per_mm/1000;
     //output("Z_Move_L mcuoid=%c diff_step=%c sen_z=%c dir=%c cur_z=%c", oid_g,diff_step>0?diff_step:-diff_step,sensor_z,dir,step_adj[0].cur_z);
 	////////////////////////
 	return;
