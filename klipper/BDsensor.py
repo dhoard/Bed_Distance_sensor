@@ -910,7 +910,8 @@ class BDsensorEndstopWrapper:
         pr=self.Z_Move_Live_cmd.send([self.oid, ("1 %d\0"
                     % hgt).encode('utf-8')])
     def event_motor_off(self,print_time):
-        self.BD_real_time(0)
+        if self.adjust_range != 0:
+            self.BD_real_time(0)
     def bd_update_event(self, eventtime):
         z=self.gcode_move.last_position[2] - self.gcode_move.base_position[2]
         if self.z_last != z  and self.homeing == 0:
@@ -1146,8 +1147,11 @@ class BDsensorEndstopWrapper:
             BD_height = 3
         elif BD_height < 0.0:
             BD_height = 0
-        self.gcode.respond_info("Real time leveling height:%f  "%BD_height)      
-        self.adjust_range = int((BD_height+0.01)*1000)
+        self.gcode.respond_info("Real time leveling height:%f  "%BD_height)
+        if BD_height == 0:
+            self.adjust_range = 0
+        else:    
+            self.adjust_range = int((BD_height+0.01)*1000)
       #  self.bd_sensor.I2C_BD_send("1022")
         self.bd_sensor.I2C_BD_send("1018") 
        # step_time=100
@@ -1465,8 +1469,7 @@ class BDsensorEndstopWrapper:
                                                      "the triggered at "
                                                      "%.3fmm" % self.bd_value)
             if self.bd_value <= 0:
-                self.gcode.respond_info("warning:triggered at 0mm, "
-                                        "Please slow down the homing z speed")
+                self.gcode.respond_info("warning:triggered at 0mm")
             # time.sleep(0.1)
             self.endstop_bdsensor_offset = 0
             if self.sda_pin_num is not self.endstop_pin_num:
