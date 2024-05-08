@@ -129,7 +129,7 @@ int BD_i2c_init(uint32_t _sda,uint32_t _scl,
 		step_adj[i].adj_z_range=0;
 	}
     BD_i2c_write(CMD_REBOOT_SENSOR); //reset BDsensor
-	timer_bd_init();
+	
     return 1;
 }
 
@@ -440,6 +440,7 @@ command_Z_Move_Live(uint32_t *args)
         step_adj[z_index].step_time=j;
     else if(tmp[0]=='6'){
         step_adj[z_index].zoid=j;
+		timer_bd_init();
     }
 
    //output("Z_Move_L mcuoid=%c j=%c", oid,j);

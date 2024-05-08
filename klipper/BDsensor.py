@@ -806,7 +806,7 @@ class BDsensorEndstopWrapper:
         self.reactor = self.printer.get_reactor()
         self.bd_update_timer = self.reactor.register_timer(
             self.bd_update_event)
-        self.reactor.update_timer(self.bd_update_timer, self.reactor.NOW)
+        
         self.status_dis = None
         # try:
         # self.status_dis=self.printer.lookup_object('display_status')
@@ -1131,6 +1131,7 @@ class BDsensorEndstopWrapper:
         cmd_bd = gcmd.get_float('REAL_TIME_HEIGHT', None)
         try:
             self.BD_real_time(cmd_bd)
+            self.reactor.update_timer(self.bd_update_timer, self.reactor.NOW)
         except Exception as e:
             pass
         cmd_bd = gcmd.get_int('NO_STOP_PROBE', None)
