@@ -209,7 +209,7 @@ void BD_I2C_start(void)
 
 void  BD_i2c_stop(void)
 {
- //   ndelay_bd(delay_m);
+    ndelay_bd(delay_m);
     sda_gpio=gpio_out_setup(sda_pin, 1);
     BD_setLow(sda_gpio);
     ndelay_bd(delay_m);
@@ -218,7 +218,7 @@ void  BD_i2c_stop(void)
     ndelay_bd(delay_m);
 
     BD_setHigh(sda_gpio);
-   // ndelay_bd(delay_m);
+    ndelay_bd(delay_m);
 }
 
 uint16_t BD_i2c_read(void)
