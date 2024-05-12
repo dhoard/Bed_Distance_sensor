@@ -294,8 +294,9 @@ class BDPrinterProbe:
             try:
                 if ((self.mcu_probe.bd_sensor is not None) and
                         (("BED_MESH_CALIBRATE" in gcmd.get_command()) or
-                         ("QUAD_GANTRY_LEVEL" in gcmd.get_command()
-                         and self.mcu_probe.quad_gantry_level_probe == 0))):
+                         (("QUAD_GANTRY_LEVEL" in gcmd.get_command() or
+                           "Z_TILT_ADJUST" in gcmd.get_command())
+                         and self.mcu_probe.QGL_Tilt_Probe == 0))):
                     # pos = self._probe(speed)
                     toolhead.wait_moves()
                     time.sleep(0.004)
@@ -708,7 +709,7 @@ class BDsensorEndstopWrapper:
         self.no_stop_probe = config.get('no_stop_probe', None)
         self.collision_homing = config.getint('collision_homing', 0)
         self.collision_calibrate = config.getint('collision_calibrate', 0)
-        self.quad_gantry_level_probe = config.getint('quad_gantry_level_probe', 0)
+        self.QGL_Tilt_Probe = config.getint('QGL_Tilt_Probe', 1)
 
         gcode_macro = self.printer.load_object(config,
                                                'gcode_macro')
@@ -1115,7 +1116,7 @@ class BDsensorEndstopWrapper:
     def bd_set(self, gcmd):
         cmd_bd = 0.0
         cmd_bd = gcmd.get_float('Z_ADJUST', None)
-        try:
+        if cmd_bd is not None:
             gcmd.respond_info("z_adjust:%f, recommend to move the nozzle "
                               "close to bed and calibrate again the BDsensor"
                               "instead of chang z_adjust" % cmd_bd)
@@ -1131,23 +1132,23 @@ class BDsensorEndstopWrapper:
             gcmd.respond_info("The SAVE_CONFIG command will update"
                               "the printer config")
             return
-        except Exception as e:
-            pass
 
         cmd_bd = gcmd.get_float('REAL_TIME_HEIGHT', None)
-        try:
+        if cmd_bd is not None:
             self.BD_real_time(cmd_bd)
             self.reactor.update_timer(self.bd_update_timer, self.reactor.NOW)
-        except Exception as e:
-            pass
+
         cmd_bd = gcmd.get_int('NO_STOP_PROBE', None)
-        try:
+        if cmd_bd is not None:
             configfile = self.printer.lookup_object('configfile')
             configfile.set(self.name, 'no_stop_probe', "%d" % cmd_bd)
             gcmd.respond_info("no_stop_probe is setted:%d The SAVE_CONFIG"
                               "command will update the printer config", cmd_bd)
-        except Exception as e:
-            pass
+
+        cmd_bd = gcmd.get_float('QGL_TILT_PROBE', None)
+        if cmd_bd is not None:
+            self.QGL_Tilt_Probe = cmd_bd
+            self.gcode.respond_info("QGL_Tilt_Probe:%d"%self.QGL_Tilt_Probe)
 
     def BD_real_time(self, BD_height): 
         if BD_height >= 3.0:
