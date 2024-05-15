@@ -50,6 +50,8 @@ if ! grep -q "BD_sensor.c" "${HOME_DIR}/src/Makefile"; then
     echo "src-y += BD_sensor.c  " >> "${HOME_DIR}/src/Makefile"
 fi
 
+chmod +x "${BDDIR}/make_with_bdsensor.sh"
+
 if ! grep -q "klippy/extras/BDsensor.py" "${HOME_DIR}/.git/info/exclude"; then
     echo "klippy/extras/BDsensor.py" >> "${HOME_DIR}/.git/info/exclude"
 fi
