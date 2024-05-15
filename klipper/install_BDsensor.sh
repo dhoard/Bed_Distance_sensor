@@ -41,10 +41,14 @@ if [ -e "${HOME_DIR}/src/BD_sensor.c" ]; then
 fi
 ln -s "${BDDIR}/BD_sensor.c" "${HOME_DIR}/src/BD_sensor.c"
 
+if [ -e "${HOME_DIR}/make_with_bdsensor.sh" ]; then
+    rm "${HOME_DIR}/make_with_bdsensor.sh"
+fi
+ln -s "${BDDIR}/make_with_bdsensor.sh" "${HOME_DIR}/make_with_bdsensor.sh"
+
 if ! grep -q "BD_sensor.c" "${HOME_DIR}/src/Makefile"; then
     echo "src-y += BD_sensor.c  " >> "${HOME_DIR}/src/Makefile"
 fi
-
 
 if ! grep -q "klippy/extras/BDsensor.py" "${HOME_DIR}/.git/info/exclude"; then
     echo "klippy/extras/BDsensor.py" >> "${HOME_DIR}/.git/info/exclude"
@@ -53,15 +57,10 @@ if ! grep -q "src/BD_sensor.c" "${HOME_DIR}/.git/info/exclude"; then
     echo "src/BD_sensor.c" >> "${HOME_DIR}/.git/info/exclude"
 fi
 
-if ! grep -q "src/Makefile" "${HOME_DIR}/.git/info/exclude"; then
-    echo "src/Makefile" >> "${HOME_DIR}/.git/info/exclude"
+if ! grep -q "make_with_bdsensor.sh" "${HOME_DIR}/.git/info/exclude"; then
+    echo "make_with_bdsensor.sh" >> "${HOME_DIR}/.git/info/exclude"
 fi
 
-sed 's/--dirty//g' "${HOME_DIR}/scripts/buildcommands.py" -i
-
-if ! grep -q "scripts/buildcommands.py" "${HOME_DIR}/.git/info/exclude"; then
-    echo "scripts/buildcommands.py" >> "${HOME_DIR}/.git/info/exclude"
-fi
 
 echo ""
 echo "Install Bed Distance Sensor successful :) "
