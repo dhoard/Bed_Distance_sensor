@@ -19,15 +19,23 @@
 #include "stepper.h" // stepper_event
 #include "trsync.h" // trsync_add_signal
 
-#define DATA_IS_CMD                   1015
+#define CMD_READ_DATA                 1015
 #define CMD_READ_VERSION              1016
 #define CMD_START_READ_CALIBRATE_DATA 1017
-#define CMD_END_READ_CALIBRATE_DATA   1018
+#define CMD_DISTANCE_MODE             1018
 #define CMD_START_CALIBRATE           1019
 #define CMD_END_CALIBRATE             1021
 #define CMD_REBOOT_SENSOR             1022
 #define CMD_SWITCH_MODE               1023
 #define DATA_ERROR                    1024
+
+#define CMD_Z_INDEX                    1025
+#define CMD_CUR_Z                      1026
+#define CMD_ADJ_Z                      1027
+#define CMD_DIR_INV                    1028
+#define CMD_STEP_MM                    1029
+#define CMD_ZOID                       1030
+
 
 #define BYTE_CHECK_OK     0x01
 #define BYTE_CHECK_ERR    0x00
@@ -50,7 +58,7 @@ enum { ESF_PIN_HIGH=1<<0, ESF_HOMING=1<<1 };
 uint32_t delay_m = 20, homing_pose = 0;
 int sda_pin = -1, scl_pin = -1, z_ofset = 0;
 uint16_t BD_Data;
-uint16_t BD_read_flag=CMD_END_READ_CALIBRATE_DATA;
+uint16_t BD_read_flag=CMD_DISTANCE_MODE;
 int switch_mode = 0; //1:in switch mode
 struct gpio_out sda_gpio, scl_gpio;
 struct gpio_in sda_gpio_in;
@@ -247,7 +255,7 @@ uint16_t BD_i2c_read(void)
     BD_i2c_stop();
     if (BD_Check_OddEven(b) && (b & 0x3FF) < 1020){
         b = (b & 0x3FF);
-        if(BD_read_flag==CMD_END_READ_CALIBRATE_DATA&&(b<1000)){
+        if(BD_read_flag==CMD_DISTANCE_MODE&&(b<1000)){
             b = b - z_ofset;
             if(b>DATA_ERROR)
                 b=0;
@@ -346,7 +354,6 @@ static uint_fast8_t bd_event(struct timer *t)
 	else //if(CONFIG_CLOCK_FREQ>60000000)
 		timer_ilde= timer_from_us(19000);
 
-	
      if(diff_step){
 		adjust_z_move();
      }
@@ -389,6 +396,13 @@ void timer_bd_init(void)
     bd_tim.time.waketime = timer_read_time()+1000000;
     bd_tim.time.func = bd_event;
     sched_add_timer(&bd_tim.time);
+	//output("timer_bd_init mcuoid=%c", oid_g);
+}
+
+void timer_bd_uinit(void)
+{
+    sched_del_timer(&bd_tim.time);
+	//output("timer_bd_uinit mcuoid=%c", oid_g);
 }
 
 void adust_Z_calc(uint16_t sensor_z,struct stepper *s)
@@ -408,7 +422,7 @@ void adust_Z_calc(uint16_t sensor_z,struct stepper *s)
 	}
     int diff_mm = (sensor_z*10 - step_adj[0].cur_z);
     diff_step = diff_mm * step_adj[0].steps_per_mm/1000;
-    //output("Z_Move_L mcuoid=%c diff_step=%c sen_z=%c dir=%c cur_z=%c", oid_g,diff_step>0?diff_step:-diff_step,sensor_z,dir,step_adj[0].cur_z);
+    //output("Z_Move_L mcuoid=%c diff_step=%c sen_z=%c cur_z=%c", oid_g,diff_step>0?diff_step:-diff_step,sensor_z,step_adj[0].cur_z);
 	////////////////////////
 	return;
 
@@ -416,70 +430,64 @@ void adust_Z_calc(uint16_t sensor_z,struct stepper *s)
 
 
 void
-command_Z_Move_Live(uint32_t *args)
+cmd_RT_Live(uint32_t *args)
 {
-    int i=0,j=0;
-    char *tmp;
-    uint8_t oid = args[0];
-    tmp=command_decode_ptr(args[2]);
-    j=atoi(tmp+2);
-    if(tmp[0]=='0')
-        z_index=j;
-    else if(tmp[0]=='1'){
-        step_adj[0].cur_z=j;
+    int cmd=args[1],dat=args[2];
+    if(cmd==CMD_Z_INDEX) // 1025  CMD_Z_INDEX
+        z_index=dat;
+    else if(cmd==CMD_CUR_Z){ //1026 CMD_CUR_Z
+        step_adj[0].cur_z=dat;
 		diff_step = 0;
+	    if (step_adj[0].adj_z_range<100||step_adj[0].cur_z>3000||step_adj[0].cur_z<100)
+			timer_bd_uinit();
+	    else if(step_adj[0].cur_z<=step_adj[z_index].adj_z_range)
+	        timer_bd_init();
     }
-    else if(tmp[0]=='2')
-        step_adj[z_index].adj_z_range=j;
-    else if(tmp[0]=='3')
-        step_adj[z_index].invert_dir=j;
-    else if(tmp[0]=='4'){
-        step_adj[z_index].steps_per_mm=j;
+    else if(cmd==CMD_ADJ_Z) //1027  CMD_ADJ_Z
+        step_adj[z_index].adj_z_range=dat;
+    else if(cmd==CMD_DIR_INV) //1028  CMD_DIR_INV
+        step_adj[z_index].invert_dir=dat;
+    else if(cmd==CMD_STEP_MM){ //1029  CMD_STEP_MM
+        step_adj[z_index].steps_per_mm=dat;
     }
-    else if(tmp[0]=='5')
-        step_adj[z_index].step_time=j;
-    else if(tmp[0]=='6'){
-        step_adj[z_index].zoid=j;
-		timer_bd_init();
+    else if(cmd==CMD_ZOID){ //1030  CMD_ZOID
+        step_adj[z_index].zoid=dat;
     }
 
-   //output("Z_Move_L mcuoid=%c j=%c", oid,j);
-
-    sendf("Z_Move_Live_response oid=%c return_set=%*s", oid,i,tmp);
 }
-DECL_COMMAND(command_Z_Move_Live, "Z_Move_Live oid=%c data=%*s");
-//for gcode command
-void
-command_I2C_BD_receive(uint32_t *args)
-{
-    uint8_t oid = args[0];
-    BD_Data=BD_i2c_read();
-    sendf("I2C_BD_receive_response oid=%c response=%c", oid,BD_Data);
-}
-
-DECL_COMMAND(command_I2C_BD_receive, "I2C_BD_receive oid=%c data=%*s");
-
 
 void
 command_I2C_BD_send(uint32_t *args)
 {
-    unsigned int addr=atoi(command_decode_ptr(args[2]));
-    BD_read_flag=addr;
-    if(addr==DATA_IS_CMD)
-        return;
-    BD_i2c_write(addr);
-    if (addr==CMD_SWITCH_MODE)
-        switch_mode=1;
-    else if(addr>DATA_IS_CMD)
-        switch_mode=0;
-    else if(switch_mode==1){//write switch value
-        sda_gpio_in=gpio_in_setup(sda_pin, 1);
-        BD_setLow(scl_gpio);
+    unsigned int cmd_c=args[1];
+	oid_g=args[0];
+    //output("command_I2C_BD_send mcuoid=%c cmd=%c dat=%c", args[0],cmd_c,args[2]);
+	//only read data
+	if(cmd_c==CMD_READ_DATA && args[2]==1){
+        uint8_t oid = args[0];
+        BD_Data=BD_i2c_read();
+        sendf("I2CBDr oid=%c r=%c", oid,BD_Data);
+	}
+	else if(cmd_c<=1030&& args[2]==0){
+        BD_read_flag=cmd_c;
+        BD_i2c_write(cmd_c);
+        if (cmd_c==CMD_SWITCH_MODE)
+            switch_mode=1;
+        else if(cmd_c>CMD_READ_DATA){
+            switch_mode=0;
+            if(cmd_c>=1025 && cmd_c<=1030 ){
+                cmd_RT_Live(args);
+            }
+        }
+        else if(switch_mode==1){//write switch value
+            sda_gpio_in=gpio_in_setup(sda_pin, 1);
+            BD_setLow(scl_gpio);
+        }
+        sendf("I2CBDr oid=%c r=%c", args[0],cmd_c);
     }
-
 }
 
-DECL_COMMAND(command_I2C_BD_send, "I2C_BD_send oid=%c data=%*s");
+DECL_COMMAND(command_I2C_BD_send, "I2CBD oid=%c c=%c d=%c");
 
 
 void
@@ -581,8 +589,16 @@ command_BDendstop_home(uint32_t *args)
     e.pin_num = args[8];
     e.pin =  gpio_in_setup(args[8], 1);
     sched_add_timer(&e.time);
+	if(args[9]==1)
+	{
+        BD_i2c_write(CMD_SWITCH_MODE);
+		BD_i2c_write(args[10]);
+		sda_gpio_in=gpio_in_setup(sda_pin, 1);
+        BD_setLow(scl_gpio);
+		switch_mode=1;
+	}
 }
 DECL_COMMAND(command_BDendstop_home,
              "BDendstop_home oid=%c clock=%u sample_ticks=%u sample_count=%c"
              " rest_ticks=%u pin_value=%c trsync_oid=%c trigger_reason=%c"
-             " endstop_pin=%c");
+             " endstop_pin=%c sw=%c sw_val=%c");
