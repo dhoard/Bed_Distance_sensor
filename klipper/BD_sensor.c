@@ -468,23 +468,20 @@ command_I2C_BD_send(uint32_t *args)
         BD_Data=BD_i2c_read();
         sendf("I2CBDr oid=%c r=%c", oid,BD_Data);
 	}
-	else if(cmd_c<=1030&& args[2]==0){
+	else if(cmd_c<1025&& args[2]==0){
         BD_read_flag=cmd_c;
         BD_i2c_write(cmd_c);
-        if (cmd_c==CMD_SWITCH_MODE)
-            switch_mode=1;
-        else if(cmd_c>CMD_READ_DATA){
+        if(cmd_c>CMD_READ_DATA){
             switch_mode=0;
-            if(cmd_c>=1025 && cmd_c<=1030 ){
-                cmd_RT_Live(args);
-            }
-        }
-        else if(switch_mode==1){//write switch value
-            sda_gpio_in=gpio_in_setup(sda_pin, 1);
-            BD_setLow(scl_gpio);
-        }
+         }
         sendf("I2CBDr oid=%c r=%c", args[0],cmd_c);
     }
+	else if(cmd_c>=1025 && cmd_c<=1030 ){
+		BD_read_flag=cmd_c;
+		switch_mode=0;
+	    cmd_RT_Live(args);
+		sendf("I2CBDr oid=%c r=%c", args[0],cmd_c);
+	}
 }
 
 DECL_COMMAND(command_I2C_BD_send, "I2CBD oid=%c c=%c d=%c");

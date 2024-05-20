@@ -188,6 +188,8 @@ class BDPrinterProbe:
             raise self.printer.command_error("Must home before probe")
         phoming = self.printer.lookup_object('homing')
         pos = toolhead.get_position()
+        self.mcu_probe.reactor.update_timer(self.mcu_probe.bd_update_timer, 
+                                   self.mcu_probe.reactor.NEVER)
         pos[2] = self.z_position
         try:
             epos = phoming.probing_move(self.mcu_probe, pos, speed)
@@ -898,6 +900,8 @@ class BDsensorEndstopWrapper:
             self.BD_real_time(0)
     def bd_update_event(self, eventtime):
         z=self.gcode_move.last_position[2] - self.gcode_move.base_position[2]
+        if self.homing == 1:
+            self.reactor.update_timer(self.bd_update_timer, self.reactor.NEVER)
         if self.z_last != z  and self.homing == 0:
             self.z_last = z
             self.toolhead = self.printer.lookup_object('toolhead')
@@ -1102,8 +1106,7 @@ class BDsensorEndstopWrapper:
 
         cmd_bd = gcmd.get_float('REAL_TIME_HEIGHT', None)
         if cmd_bd is not None:
-            self.BD_real_time(cmd_bd)
-            self.reactor.update_timer(self.bd_update_timer, self.reactor.NOW)
+            self.BD_real_time(cmd_bd) 
             return
 
         cmd_bd = gcmd.get_int('NO_STOP_PROBE', None)
@@ -1158,7 +1161,11 @@ class BDsensorEndstopWrapper:
                 self.I2C_BD_send(1030, stepper.get_oid())
                 z_index = z_index + 1
         self.I2C_BD_send(CMD_DISTANCE_MODE)
-
+        if self.adjust_range == 0:
+            self.reactor.update_timer(self.bd_update_timer, self.reactor.NEVER)
+        else:
+            self.reactor.update_timer(self.bd_update_timer, self.reactor.NOW)
+        
     def process_M102(self, gcmd):
         self.process_m102 = 1
         cmd_bd = 0
