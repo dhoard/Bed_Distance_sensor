@@ -438,13 +438,14 @@ cmd_RT_Live(uint32_t *args)
     else if(cmd==CMD_CUR_Z){ //1026 CMD_CUR_Z
         step_adj[0].cur_z=dat;
 		diff_step = 0;
-	    if (step_adj[0].adj_z_range<100||step_adj[0].cur_z>3000||step_adj[0].cur_z<100)
+    }
+    else if(cmd==CMD_ADJ_Z){ //1027  CMD_ADJ_Z
+        step_adj[z_index].adj_z_range=dat;
+		if (step_adj[0].adj_z_range<50)
 			timer_bd_uinit();
-	    else if(step_adj[0].cur_z<=step_adj[z_index].adj_z_range)
+	    else if(step_adj[0].adj_z_range<=1000)//(step_adj[0].cur_z<=step_adj[z_index].adj_z_range)
 	        timer_bd_init();
     }
-    else if(cmd==CMD_ADJ_Z) //1027  CMD_ADJ_Z
-        step_adj[z_index].adj_z_range=dat;
     else if(cmd==CMD_DIR_INV) //1028  CMD_DIR_INV
         step_adj[z_index].invert_dir=dat;
     else if(cmd==CMD_STEP_MM){ //1029  CMD_STEP_MM

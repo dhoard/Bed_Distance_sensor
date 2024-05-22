@@ -912,7 +912,7 @@ class BDsensorEndstopWrapper:
                     #z=self.gcode_move.last_position[2]
                     #stepper._query_mcu_position()
                     self.bd_set_aj_len(z)
-                    #self.gcode.respond_info("current z:%f" % z)
+                    self.gcode.respond_info("current z:%f" % z)
                     break
             self.I2C_BD_send(CMD_DISTANCE_MODE)
         return eventtime + BD_TIMER
