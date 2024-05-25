@@ -35,6 +35,7 @@
 #define CMD_DIR_INV                    1028
 #define CMD_STEP_MM                    1029
 #define CMD_ZOID                       1030
+#define CMD_RT_SAMPLE_TIME             1031
 
 
 #define BYTE_CHECK_OK     0x01
@@ -96,7 +97,7 @@ enum {
 };
 struct endstop bd_tim ;
 
-int32_t	diff_step=0,diff_step_old=0;
+int32_t	diff_step=0,diff_step_old=0,RT_SAMPLE_TIME=0;
 
 float abs_bd(float a, float b){
  if (a > b)
@@ -137,7 +138,13 @@ int BD_i2c_init(uint32_t _sda,uint32_t _scl,
 		step_adj[i].adj_z_range=0;
 	}
     BD_i2c_write(CMD_REBOOT_SENSOR); //reset BDsensor
-	
+	////
+ 	if(CONFIG_CLOCK_FREQ>100000000)
+		RT_SAMPLE_TIME= timer_from_us(11000);
+	else if(CONFIG_CLOCK_FREQ>60000000)
+		RT_SAMPLE_TIME= timer_from_us(16000);
+	else //if(CONFIG_CLOCK_FREQ>60000000)
+		RT_SAMPLE_TIME= timer_from_us(19000);
     return 1;
 }
 
@@ -346,13 +353,7 @@ static uint_fast8_t bd_event(struct timer *t)
 
     irq_disable();
     static uint16_t sensor_z_old = 0;
-    uint32_t timer_ilde=0;
- 	if(CONFIG_CLOCK_FREQ>100000000)
-		timer_ilde= timer_from_us(11000);
-	else if(CONFIG_CLOCK_FREQ>60000000)
-		timer_ilde= timer_from_us(16000);
-	else //if(CONFIG_CLOCK_FREQ>60000000)
-		timer_ilde= timer_from_us(19000);
+    uint32_t timer_ilde=RT_SAMPLE_TIME;
 
      if(diff_step){
 		adjust_z_move();
@@ -454,6 +455,9 @@ cmd_RT_Live(uint32_t *args)
     else if(cmd==CMD_ZOID){ //1030  CMD_ZOID
         step_adj[z_index].zoid=dat;
     }
+    else if(cmd==CMD_RT_SAMPLE_TIME){ //1031  CMD_SAMPLE_TIME
+        RT_SAMPLE_TIME= timer_from_us(dat*1000);;
+    }
 
 }
 
@@ -477,7 +481,7 @@ command_I2C_BD_send(uint32_t *args)
          }
         sendf("I2CBDr oid=%c r=%c", args[0],cmd_c);
     }
-	else if(cmd_c>=1025 && cmd_c<=1030 ){
+	else if(cmd_c>=1025 && cmd_c<=1031 ){
 		BD_read_flag=cmd_c;
 		switch_mode=0;
 	    cmd_RT_Live(args);

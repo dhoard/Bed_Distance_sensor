@@ -682,6 +682,7 @@ class BDsensorEndstopWrapper:
         self.no_stop_probe = config.get('no_stop_probe', None)
         self.collision_homing = config.getint('collision_homing', 0)
         self.collision_calibrate = config.getint('collision_calibrate', 0)
+        self.rt_sample_time = config.getint('rt_sample_time', 0)#ms
         self.QGL_Tilt_Probe = config.getint('QGL_Tilt_Probe', 1)
         self.switch_mode_sample_time = config.getint('SWITCH_MODE_SAMPLE_TIME', 0.006)
         self.speed = config.getfloat('speed', 3.0, above=0.)
@@ -1158,6 +1159,8 @@ class BDsensorEndstopWrapper:
                 self.I2C_BD_send(1027, self.adjust_range)
                 self.I2C_BD_send(1028, orig_invert_dir)
                 self.I2C_BD_send(1029, steps_per_mm)
+                if self.rt_sample_time > 0:
+                    self.I2C_BD_send(1031, self.rt_sample_time)
                 self.I2C_BD_send(1030, stepper.get_oid())
                 z_index = z_index + 1
         self.I2C_BD_send(CMD_DISTANCE_MODE)
