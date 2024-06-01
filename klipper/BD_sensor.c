@@ -315,7 +315,7 @@ stepper_oid_lookup_bd(uint8_t oid)
 void adjust_z_move(void)
 {
 	struct stepper *s = stepper_oid_lookup_bd(step_adj[0].zoid);
-	int dir=0;//down
+	int dir=0,dir_t=0;//down
 	if(s->count){
 		//diff_step = 0;
 		return;
@@ -326,25 +326,43 @@ void adjust_z_move(void)
 	}
 	else{
 		diff_step++;
-		dir=1;
+
 	}
+	
 	for(int i=0;i<NUM_Z_MOTOR;i++){
 		if(step_adj[i].zoid==0)
 			continue;
 		s = stepper_oid_lookup_bd(step_adj[i].zoid);
+		dir=diff_step>0?0:1;
 		if(step_adj[i].invert_dir==1)
-			dir=!dir;
-
-		if(!!(s->flags&SF_LAST_DIR) != dir){
+			dir=dir?0:1;
+        dir_t=!!(s->flags&SF_LAST_DIR);
+		if(dir_t != dir){
 			gpio_out_toggle_noirq(s->dir_pin);
-		    gpio_out_toggle_noirq(s->step_pin);
-			gpio_out_toggle_noirq(s->dir_pin);
-		}
-		else
-			gpio_out_toggle_noirq(s->step_pin);
+		} 
 		
 	} 
-
+	for(int i=0;i<NUM_Z_MOTOR;i++){
+		if(step_adj[i].zoid==0)
+			continue;
+		s = stepper_oid_lookup_bd(step_adj[i].zoid);
+		gpio_out_toggle_noirq(s->step_pin);
+		
+	} 
+	
+	for(int i=0;i<NUM_Z_MOTOR;i++){
+		if(step_adj[i].zoid==0)
+			continue;
+		s = stepper_oid_lookup_bd(step_adj[i].zoid);
+		dir=diff_step>0?0:1;
+		if(step_adj[i].invert_dir==1)
+			dir=dir?0:1;
+        dir_t=!!(s->flags&SF_LAST_DIR);
+		if(dir_t != dir){
+			gpio_out_toggle_noirq(s->dir_pin);
+		} 
+		
+	} 
 }
 
 
@@ -352,7 +370,7 @@ static uint_fast8_t bd_event(struct timer *t)
 {
 
     irq_disable();
-    static uint16_t sensor_z_old = 0;
+    //static uint16_t sensor_z_old = -1;
     uint32_t timer_ilde=RT_SAMPLE_TIME;
 
      if(diff_step){
@@ -372,8 +390,8 @@ static uint_fast8_t bd_event(struct timer *t)
 			if(tm<1023){
 				BD_Data=tm;
 				{	
-					adust_Z_calc(sensor_z_old,s);
-					sensor_z_old = BD_Data;
+					adust_Z_calc(BD_Data,s);
+					//sensor_z_old = BD_Data;
 				}
 			}
 			else

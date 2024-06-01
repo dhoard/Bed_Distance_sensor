@@ -892,10 +892,15 @@ class BDsensorEndstopWrapper:
         self.toolhead.note_kinematic_activity(print_time)
         self.toolhead.dwell(accel_t + cruise_t + accel_t)
 
-    def bd_set_aj_len(self, hgt):
-        hgt=hgt*1000 
+    def bd_set_cur_z(self, hgt, s_log):
+        if s_log == 1:
+            self.gcode.respond_info("Curent z:%.2f (gcode_z:%.2f - z_offset:%.2f)" % (hgt-self.z_offset,hgt,self.z_offset))
+        if (hgt-self.z_offset)<=0:
+            self.gcode.respond_info("Real Time update fail: update z must be >0")
+            return;
+        hgt = hgt-self.z_offset
+        hgt=int(hgt*1000) 
         self.I2C_BD_send(1026, hgt)
-
     def event_motor_off(self,print_time):
         if self.adjust_range != 0:
             self.BD_real_time(0)
@@ -912,8 +917,8 @@ class BDsensorEndstopWrapper:
                 if stepper.is_active_axis('z'):
                     #z=self.gcode_move.last_position[2]
                     #stepper._query_mcu_position()
-                    self.bd_set_aj_len(z)
-                    self.gcode.respond_info("current z:%f" % z)
+                    self.bd_set_cur_z(z,1)
+                    
                     break
             self.I2C_BD_send(CMD_DISTANCE_MODE)
         return eventtime + BD_TIMER
@@ -1138,10 +1143,12 @@ class BDsensorEndstopWrapper:
             bd_height = 3
         elif bd_height < 0.0:
             bd_height = 0
-        self.gcode.respond_info("Real time leveling height:%f  "%bd_height)
+        self.gcode.respond_info("Real time leveling height:%.2f ( %.2f - z_offset:%.2f ) "%(bd_height-self.z_offset,bd_height,self.z_offset))
+        
         if bd_height == 0:
             self.adjust_range = 0
-        else:    
+        else:
+            bd_height = bd_height-self.z_offset
             self.adjust_range = int((bd_height+0.01)*1000)
         self.I2C_BD_send(CMD_DISTANCE_MODE)
         self.toolhead = self.printer.lookup_object('toolhead')
@@ -1150,12 +1157,14 @@ class BDsensorEndstopWrapper:
         for stepper in kin.get_steppers():
             if stepper.is_active_axis('z'):
                 steps_per_mm = 1.0/stepper.get_step_dist()
-                z = self.gcode_move.last_position[2]
+                #z = self.gcode_move.last_position[2]
+                z=self.gcode_move.last_position[2] - self.gcode_move.base_position[2]
                 #stepper._query_mcu_position()
                 invert_dir, orig_invert_dir = stepper.get_dir_inverted()
-                z = int(z*1000)
+                #z = int(z*1000)
                 self.I2C_BD_send(1025, z_index)
-                self.I2C_BD_send(1026, z)
+                #self.I2C_BD_send(1026, z)
+                self.bd_set_cur_z(z,0)
                 self.I2C_BD_send(1027, self.adjust_range)
                 self.I2C_BD_send(1028, orig_invert_dir)
                 self.I2C_BD_send(1029, steps_per_mm)
