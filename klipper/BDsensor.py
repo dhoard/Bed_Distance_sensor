@@ -667,8 +667,8 @@ class BDsensorEndstopWrapper:
         self.name = config.get_name()
         self.z_adjust = config.getfloat('z_adjust', 0., minval=-0.3, below=0.3)
         self.z_offset = config.getfloat('z_offset', 0., minval=-0.6, maxval=0.6)
-        self.position_endstop = config.getfloat('position_endstop', 0.,
-                                                minval=0.9, below=2.5)
+        self.position_endstop = config.getfloat('position_endstop', 0.7,
+                                                minval=0.5, below=2.5)
         if self.z_adjust > self.position_endstop:
             raise self.printer.command_error("The 'z_adjust' cannot be greater"
                                              " than 'position_endstop' in "
