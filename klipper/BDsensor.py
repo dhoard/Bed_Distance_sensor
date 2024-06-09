@@ -950,7 +950,7 @@ class BDsensorEndstopWrapper:
 
         return self.bd_value + self.z_offset
 
-    def BD_version(self, gcmd,r_lenght):
+    def BD_version(self, gcmd,r_lenght=20):
         self.I2C_BD_send(CMD_READ_VERSION)  # 1016 // // read sensor version
         self.I2C_BD_send(CMD_READ_VERSION)
         self.toolhead = self.printer.lookup_object('toolhead')
