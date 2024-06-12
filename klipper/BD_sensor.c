@@ -36,6 +36,7 @@
 #define CMD_STEP_MM                    1029
 #define CMD_ZOID                       1030
 #define CMD_RT_SAMPLE_TIME             1031
+#define CMD_RT_RANGE                   1032
 
 
 #define BYTE_CHECK_OK     0x01
@@ -97,7 +98,7 @@ enum {
 };
 struct endstop bd_tim ;
 
-int32_t	diff_step=0,RT_SAMPLE_TIME=0;
+int32_t	diff_step=0,RT_SAMPLE_TIME=0,adjusted_step=0,RT_RANGE=1000;
 
 int abs_bd(int a, int b){
  if (a > b)
@@ -323,10 +324,11 @@ void adjust_z_move(void)
 		
 	if(diff_step>0){
 		diff_step--;
+		adjusted_step--;
 	}
 	else{
 		diff_step++;
-
+        adjusted_step++;
 	}
 	
 	for(int i=0;i<NUM_Z_MOTOR;i++){
@@ -363,6 +365,23 @@ void adjust_z_move(void)
 		} 
 		
 	} 
+	///limite the adjust range
+	if(abs_bd(adjusted_step *1000 / step_adj[0].steps_per_mm,0)>RT_RANGE){//>+-0.3mm
+		//diff_step = 0;
+		if(adjusted_step>0){
+		   if (diff_step<0)
+		       diff_step=0;
+		   //output("adjust_z_move adjusted_step=%c steps_per_mm=%c mm=%c ", abs_bd(adjusted_step,0),step_adj[0].steps_per_mm,abs_bd(adjusted_step *1000 / step_adj[0].steps_per_mm,0));
+		}
+		else{	
+		   if (diff_step>0)
+		       diff_step=0;
+		   //output("adjust_z_move adjusted_step=-%c steps_per_mm=%c mm=%c ", abs_bd(adjusted_step,0),step_adj[0].steps_per_mm,abs_bd(adjusted_step *1000 / step_adj[0].steps_per_mm,0));
+
+		}
+		return;
+	}
+
 }
 
 
@@ -415,6 +434,7 @@ void timer_bd_init(void)
     bd_tim.time.waketime = timer_read_time()+1000000;
     bd_tim.time.func = bd_event;
     sched_add_timer(&bd_tim.time);
+	adjusted_step=0;
 	//output("timer_bd_init mcuoid=%c", oid_g);
 }
 
@@ -442,7 +462,7 @@ void adust_Z_calc(uint16_t sensor_z,struct stepper *s)
 	}
     int diff_mm = (sensor_z*10 - step_adj[0].cur_z);
     diff_step = diff_mm * step_adj[0].steps_per_mm/1000;
-
+    //nozzle collision detection prected
 	if ((sensor_z == sensor_z_old && sensor_z <= 0.3 && (abs_bd(diff_mm,0)>50))
 		||sensor_z == 0){
 		diff_step = -100 * step_adj[0].steps_per_mm/1000;
@@ -484,6 +504,9 @@ cmd_RT_Live(uint32_t *args)
     else if(cmd==CMD_RT_SAMPLE_TIME){ //1031  CMD_SAMPLE_TIME
         RT_SAMPLE_TIME= timer_from_us(dat*1000);;
     }
+	else if(cmd==CMD_RT_RANGE){ //1032	CMD_SAMPLE_TIME
+		RT_RANGE= dat;
+	}
 
 }
 
@@ -507,7 +530,7 @@ command_I2C_BD_send(uint32_t *args)
          }
         sendf("I2CBDr oid=%c r=%c", args[0],cmd_c);
     }
-	else if(cmd_c>=1025 && cmd_c<=1031 ){
+	else if(cmd_c>=1025 && cmd_c<=1032 ){
 		BD_read_flag=cmd_c;
 		switch_mode=0;
 	    cmd_RT_Live(args);

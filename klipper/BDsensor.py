@@ -121,6 +121,45 @@ class BDPrinterProbe:
             self.cmd_Z_OFFSET_APPLY_PROBE,
             desc=self.cmd_Z_OFFSET_APPLY_PROBE_help
         )
+        
+    def _probe_state_error(self):
+        raise self.printer.command_error(
+                "Internal probe error - start/end probe session mismatch")
+
+    def start_probe_session(self, gcmd):
+        if self.multi_probe_pending:
+            self._probe_state_error()
+        self.mcu_probe.multi_probe_begin()
+        self.multi_probe_pending = True
+        return self
+
+    def end_probe_session(self):
+        if not self.multi_probe_pending:
+            self._probe_state_error()
+        self.multi_probe_pending = False
+        self.mcu_probe.multi_probe_end()
+        
+    def get_probe_params(self, gcmd=None):
+        if gcmd is None:
+            gcmd = self.dummy_gcode_cmd
+        probe_speed = gcmd.get_float("PROBE_SPEED", self.speed, above=0.)
+        lift_speed = gcmd.get_float("LIFT_SPEED", self.lift_speed, above=0.)
+        samples = gcmd.get_int("SAMPLES", self.sample_count, minval=1)
+        sample_retract_dist = gcmd.get_float("SAMPLE_RETRACT_DIST",
+                                             self.sample_retract_dist, above=0.)
+        samples_tolerance = gcmd.get_float("SAMPLES_TOLERANCE",
+                                           self.samples_tolerance, minval=0.)
+        samples_retries = gcmd.get_int("SAMPLES_TOLERANCE_RETRIES",
+                                       self.samples_retries, minval=0)
+        samples_result = gcmd.get("SAMPLES_RESULT", self.samples_result)
+        return {'probe_speed': probe_speed,
+                'lift_speed': lift_speed,
+                'samples': samples,
+                'sample_retract_dist': sample_retract_dist,
+                'samples_tolerance': samples_tolerance,
+                'samples_tolerance_retries': samples_retries,
+                'samples_result': samples_result}
+
 
     def _handle_homing_move_begin(self, hmove):
         if self.mcu_probe in hmove.get_mcu_endstops():
@@ -683,6 +722,7 @@ class BDsensorEndstopWrapper:
         self.collision_homing = config.getint('collision_homing', 0)
         self.collision_calibrate = config.getint('collision_calibrate', 0)
         self.rt_sample_time = config.getint('rt_sample_time', 0)#ms
+        self.rt_max_range = config.getfloat('rt_max_range', 0, minval=0)
         self.QGL_Tilt_Probe = config.getint('QGL_Tilt_Probe', 1)
         self.switch_mode_sample_time = config.getint('SWITCH_MODE_SAMPLE_TIME', 0.006)
         self.speed = config.getfloat('speed', 3.0, above=0.)
@@ -1170,6 +1210,8 @@ class BDsensorEndstopWrapper:
                 self.I2C_BD_send(1029, steps_per_mm)
                 if self.rt_sample_time > 0:
                     self.I2C_BD_send(1031, self.rt_sample_time)
+                if self.rt_max_range > 0:
+                    self.I2C_BD_send(1032, self.rt_max_range*1000)
                 self.I2C_BD_send(1030, stepper.get_oid())
                 z_index = z_index + 1
         self.I2C_BD_send(CMD_DISTANCE_MODE)
