@@ -131,11 +131,18 @@ class BDPrinterProbe:
             self._probe_state_error()
         self.mcu_probe.multi_probe_begin()
         self.multi_probe_pending = True
+        self.mcu_probe.results = []
         return self
+        
+    def pull_probed_results(self):
+            res = self.mcu_probe.results
+            self.mcu_probe.results = []
+            return res
 
     def end_probe_session(self):
         if not self.multi_probe_pending:
             self._probe_state_error()
+        self.mcu_probe.results = []    
         self.multi_probe_pending = False
         self.mcu_probe.multi_probe_end()
         
@@ -352,7 +359,9 @@ class BDPrinterProbe:
         # Calculate and return result
         if samples_result == 'median':
             return self._calc_median(positions)
-        return self._calc_mean(positions)
+        epos = self._calc_mean(positions)
+        #epos = calc_probe_z_average(positions, params['samples_result'])
+        self.mcu_probe.results.append(epos)
 
     cmd_PROBE_help = "Probe Z-height at current XY position"
 
@@ -1299,6 +1308,7 @@ class BDsensorEndstopWrapper:
         if "V1." not in self.bdversion:
             self.BD_version(self.gcode,5)
         #self.homing = 1
+        self.switch_mode = 0
         if self.switch_mode == 1:
             #self.I2C_BD_send(CMD_SWITCH_MODE)
             sample_time = self.switch_mode_sample_time
