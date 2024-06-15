@@ -1308,7 +1308,6 @@ class BDsensorEndstopWrapper:
         if "V1." not in self.bdversion:
             self.BD_version(self.gcode,5)
         #self.homing = 1
-        self.switch_mode = 0
         if self.switch_mode == 1:
             #self.I2C_BD_send(CMD_SWITCH_MODE)
             sample_time = self.switch_mode_sample_time
