@@ -254,15 +254,8 @@ class BDPrinterProbe:
         b_value = b_value/3
         pos_new = toolhead.get_position()
         epos[2] = pos_new[2] - b_value + self.mcu_probe.endstop_bdsensor_offset
-        # toolhead.set_position(pos_new)
-        axis_twist_compensation = self.printer.lookup_object(
-            'axis_twist_compensation', None)
-        z_compensation = 0
-        if axis_twist_compensation is not None:
-            z_compensation = (
-                axis_twist_compensation.get_z_compensation_value(pos))
-        # add z compensation to probe position
-        epos[2] += z_compensation
+        # Allow axis_twist_compensation to update results
+        self.printer.send_event("probe:update_results", epos)
         self.gcode.respond_info(
             "probe at %.3f,%.3f is z=%.6f (pos:%.6f - bd:%.3f)"
             % (epos[0], epos[1], epos[2], pos_new[2], b_value)
