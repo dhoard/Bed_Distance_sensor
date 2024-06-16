@@ -121,7 +121,8 @@ class BDPrinterProbe:
             self.cmd_Z_OFFSET_APPLY_PROBE,
             desc=self.cmd_Z_OFFSET_APPLY_PROBE_help
         )
-        
+        gcode = self.printer.lookup_object('gcode')
+        self.dummy_gcode_cmd = gcode.create_gcode_command("", "", {})
     def _probe_state_error(self):
         raise self.printer.command_error(
                 "Internal probe error - start/end probe session mismatch")
