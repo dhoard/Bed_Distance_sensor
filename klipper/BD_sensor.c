@@ -384,6 +384,35 @@ void adjust_z_move(void)
 
 }
 
+#define MAX_Z_PLUSE_TIME  1200
+static uint32_t speed_smooth(int32_t adj_len)
+{
+  static int32_t total_len=0,current_inter=MAX_Z_PLUSE_TIME,acc_count=0;
+  int step_now=abs_bd(diff_step,0);
+  if (adj_len!=0){
+  	total_len = abs_bd(adj_len,0);
+	current_inter=MAX_Z_PLUSE_TIME;
+    acc_count=0;
+  }
+  
+  if (total_len <=0)
+  	return RT_SAMPLE_TIME;
+
+  if ((total_len-step_now)<(total_len/2)){
+     current_inter=current_inter-MAX_Z_PLUSE_TIME/30;
+	 if (current_inter<300){
+	 	current_inter = 300;
+	    return current_inter;
+	 }
+	 acc_count=step_now;
+  }
+  else if((total_len-step_now)>(total_len/2)&&(step_now<acc_count)){
+     current_inter=current_inter+MAX_Z_PLUSE_TIME/30;
+	 if (current_inter>MAX_Z_PLUSE_TIME)
+	 	current_inter = MAX_Z_PLUSE_TIME;
+  }
+  return current_inter;
+}
 
 static uint_fast8_t bd_event(struct timer *t)
 {
@@ -422,8 +451,10 @@ static uint_fast8_t bd_event(struct timer *t)
      if(e.sample_count || (step_adj[0].cur_z>step_adj[0].adj_z_range) || step_adj[0].adj_z_range==0)
 	 	timer_ilde = timer_ilde*10;
 	 bd_tim.time.waketime =timer_read_time() + timer_ilde;
-     if(diff_step)
-	 	bd_tim.time.waketime =timer_read_time()+timer_from_us(300);
+     if(diff_step){
+	 	//bd_tim.time.waketime =timer_read_time()+timer_from_us(300);
+	    bd_tim.time.waketime =timer_read_time()+timer_from_us(speed_smooth(0));
+     }
    irq_enable(); 
    return SF_RESCHEDULE;
 }
@@ -468,6 +499,7 @@ void adust_Z_calc(uint16_t sensor_z,struct stepper *s)
 		diff_step = -100 * step_adj[0].steps_per_mm/1000;
 	}
 	sensor_z = sensor_z_old;
+	speed_smooth(diff_step);
 	//output("Z_Move_L mcuoid=%c diff_step=%c sen_z=%c cur_z=%c", oid_g,diff_step>0?diff_step:-diff_step,sensor_z,step_adj[0].cur_z);
     //
 	////////////////////////
