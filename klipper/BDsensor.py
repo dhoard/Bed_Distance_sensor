@@ -961,7 +961,8 @@ class BDsensorEndstopWrapper:
         if s_log == 1:
             self.gcode.respond_info("Curent z:%.2f (gcode_z:%.2f - z_offset:%.2f)" % (hgt-self.z_offset,hgt,self.z_offset))
         if (hgt-self.z_offset)<=0:
-            self.gcode.respond_info("Real Time update fail: update z must be >0")
+            self.gcode.respond_info("The real_time_adjust is ignored because current z:%.2f (gcode_z:%.2f - z_offset:%.2f) <=0" % (hgt-self.z_offset,hgt,self.z_offset))
+            #self.gcode.respond_info("Since current z <0 ")
             return;
         hgt = hgt-self.z_offset
         hgt=int(hgt*1000) 
@@ -1102,13 +1103,16 @@ class BDsensorEndstopWrapper:
             if ncount >= 40:
                 self.I2C_BD_send(CMD_END_CALIBRATE)
                 self.toolhead.dwell(1)
+                self.I2C_BD_send(CMD_DISTANCE_MODE)
+                self.I2C_BD_send(CMD_DISTANCE_MODE)
+                self.BD_read_calibration(gcmd)
                 gcmd.respond_info("Calibrate Finished!")
-                gcmd.respond_info("You can send command "
-                                  "BDSENSOR_READ_CALIBRATION "
-                                  "to check the calibration data")
+                #gcmd.respond_info("You can send command "
+                #                  "BDSENSOR_READ_CALIBRATION "
+                #                  "to check the calibration data")
                 self.z_adjust = 0
-                configfile = self.printer.lookup_object('configfile')
-                configfile.set(self.name, 'z_adjust', "0.0")
+                #configfile = self.printer.lookup_object('configfile')
+                #configfile.set(self.name, 'z_adjust', "0.0")
                 break
         self.I2C_BD_send(CMD_DISTANCE_MODE)
         self.I2C_BD_send(CMD_DISTANCE_MODE)
