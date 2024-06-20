@@ -179,17 +179,10 @@ class BDPrinterProbe:
 
     def _handle_home_rails_begin(self, homing_state, rails):
         endstops = [es for rail in rails for es, name in rail.get_endstops()]
-        self.bedmesh = self.printer.lookup_object('bed_mesh', None)
-        self.bedmesh.bmc.probe_helper = BDProbePointsHelper(
-            self.config.getsection('bed_mesh'),
-            self.bedmesh.bmc.probe_finalize,
-            self.bedmesh.bmc._get_adjusted_points()
-        )
-        
         self.mcu_probe.homing = 1
         if self.mcu_probe in endstops:
-            #self.mcu_probe.homing = 1
-            self.multi_probe_begin()
+            self.mcu_probe.multi_probe_begin()
+            self.multi_probe_pending = True
 
     def _handle_home_rails_end(self, homing_state, rails):
         endstops = [es for rail in rails for es, name in rail.get_endstops()]
