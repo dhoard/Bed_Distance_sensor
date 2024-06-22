@@ -858,7 +858,7 @@ class BDsensorEndstopWrapper:
         self._trsyncs = [MCU_trsync(self.mcu_endstop, self._trdispatch)]
         self.ncont = 0
         self.z_last = 0
-
+        self.z_offset_adj = 0
 
     def get_mcu(self):
         return self.mcu
@@ -952,35 +952,43 @@ class BDsensorEndstopWrapper:
 
     def bd_set_cur_z(self, hgt, s_log):
         if s_log == 1:
-            self.gcode.respond_info("Curent z:%.2f (gcode_z:%.2f - z_offset:%.2f)" % (hgt-self.z_offset,hgt,self.z_offset))
+            self.gcode.respond_info("Curent z:%.2f (gcode_z:%.2f - (z_offset:%.2f - z_offset_adj:%.2f))" % (hgt-(self.z_offset-self.z_offset_adj),hgt,self.z_offset,self.z_offset_adj))
         if (hgt-self.z_offset)<=0:
-            self.gcode.respond_info("The real_time_adjust is ignored because current z:%.2f (gcode_z:%.2f - z_offset:%.2f) <=0" % (hgt-self.z_offset,hgt,self.z_offset))
+            self.gcode.respond_info("The real_time_adjust is ignored because current z:%.2f (gcode_z:%.2f - (z_offset:%.2f - z_offset_adj:%.2f)) <=0" % (hgt-(self.z_offset-self.z_offset_adj),hgt,self.z_offset,self.z_offset_adj))
             #self.gcode.respond_info("Since current z <0 ")
             return;
-        hgt = hgt-self.z_offset
+        hgt = hgt-(self.z_offset-self.z_offset_adj)
         hgt=int(hgt*1000) 
         self.I2C_BD_send(1026, hgt)
     def event_motor_off(self,print_time):
         if self.adjust_range != 0:
             self.BD_real_time(0)
+
+    def bd_update_z(self,z):
+        self.toolhead = self.printer.lookup_object('toolhead')
+        kin = self.toolhead.get_kinematics()
+        for stepper in kin.get_steppers():
+            if stepper.is_active_axis('z'):
+                self.bd_set_cur_z(z,1)   
+                break
+        self.I2C_BD_send(CMD_DISTANCE_MODE)
+        
     def bd_update_event(self, eventtime):
         z=self.gcode_move.last_position[2] - self.gcode_move.base_position[2]
         if self.homing == 1:
             self.reactor.update_timer(self.bd_update_timer, self.reactor.NEVER)
+
+        gcode_move = self.printer.lookup_object("gcode_move")
+        offset = gcode_move.get_status()['homing_origin'].z
+        if self.z_offset_adj != offset and offset != 0:
+            self.z_offset_adj = offset
+            self.bd_update_z(z)
+
         if self.z_last != z  and self.homing == 0:
             self.z_last = z
-            self.toolhead = self.printer.lookup_object('toolhead')
-            kin = self.toolhead.get_kinematics()
-            #z_index = 0
-            for stepper in kin.get_steppers():
-                if stepper.is_active_axis('z'):
-                    #z=self.gcode_move.last_position[2]
-                    #stepper._query_mcu_position()
-                    self.bd_set_cur_z(z,1)
-                    
-                    break
-            self.I2C_BD_send(CMD_DISTANCE_MODE)
+            self.bd_update_z(z)
         return eventtime + BD_TIMER
+
     def cmd_M102(self, gcmd, wait=False):
         # self.gcode_que=gcmd
         self.process_M102(gcmd)

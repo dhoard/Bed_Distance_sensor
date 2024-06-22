@@ -365,6 +365,7 @@ void adjust_z_move(void)
 		} 
 		
 	} 
+	/*
 	///limite the adjust range
 	if(abs_bd(adjusted_step *1000 / step_adj[0].steps_per_mm,0)>RT_RANGE){//>+-0.3mm
 		//diff_step = 0;
@@ -381,7 +382,7 @@ void adjust_z_move(void)
 		}
 		return;
 	}
-
+  */
 }
 
 #define MAX_Z_PLUSE_TIME  1200
