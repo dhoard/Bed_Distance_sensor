@@ -42,6 +42,13 @@ def calc_move_time(dist, speed, accel):
     cruise_t = (dist - accel_decel_d) / speed
     return axis_r, accel_t, cruise_t, speed
 
+# Helper to obtain a single probe measurement
+def run_single_probe(probe, gcmd):
+    probe_session = probe.start_probe_session(gcmd)
+    probe_session.run_probe(gcmd)
+    pos = probe_session.pull_probed_results()[0]
+    probe_session.end_probe_session()
+    return pos
 
 # I2C BD_SENSOR
 # devices connected to an MCU via an virtual i2c bus(2 any gpio)
@@ -359,7 +366,7 @@ class BDPrinterProbe:
     cmd_PROBE_help = "Probe Z-height at current XY position"
 
     def cmd_PROBE(self, gcmd):
-        pos = self.run_probe(gcmd)
+        pos = run_single_probe(self, gcmd)
         gcmd.respond_info("Result is z=%.6f" % (pos[2],))
         self.last_z_result = pos[2]
 
@@ -453,15 +460,17 @@ class BDPrinterProbe:
         manual_probe.verify_no_manual_probe(self.printer)
         # Perform initial probe
         lift_speed = self.get_lift_speed(gcmd)
-        curpos = self.run_probe(gcmd)
+        params = self.get_probe_params(gcmd)
+        curpos = run_single_probe(self, gcmd)
         # Move away from the bed
         self.probe_calibrate_z = curpos[2]
         curpos[2] += 5.
         self._move(curpos, lift_speed)
         # Move the nozzle over the probe point
-        curpos[0] += self.x_offset
-        curpos[1] += self.y_offset
-        self._move(curpos, self.speed)
+        x_offset, y_offset, z_offset = self.get_offsets()
+        curpos[0] += x_offset
+        curpos[1] += y_offset
+        self._move(curpos, params['probe_speed'])
         # Start manual probe
         manual_probe.ManualProbeHelper(self.printer, gcmd,
                                        self.probe_calibrate_finalize)
