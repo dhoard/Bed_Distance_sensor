@@ -942,6 +942,7 @@ class BDsensorEndstopWrapper:
                 self.toolhead.dwell(1)
                 self.I2C_BD_send(CMD_DISTANCE_MODE)
                 self.I2C_BD_send(CMD_DISTANCE_MODE)
+                self.toolhead.dwell(1)
                 self.BD_read_calibration(gcmd)
                 gcmd.respond_info("Calibrate Finished!")
                 #gcmd.respond_info("You can send command "
