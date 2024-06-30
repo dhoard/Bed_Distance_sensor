@@ -325,7 +325,7 @@ class BDPrinterProbe:
                     pos[2] = pos[2] - intd + self.mcu_probe.endstop_bdsensor_offset
                     self.mcu_probe.results.append(pos)
                     if len(self.mcu_probe.results) < 500:
-                        self.gcode.respond_info(f"probe at %.3f,%.3f is z=%.6f"
+                        self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
                                             % (pos[0], pos[1], pos[2]))
                     break
                 toolhead.reactor.pause(systime + 0.002)
