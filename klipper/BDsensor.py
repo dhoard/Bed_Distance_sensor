@@ -964,7 +964,7 @@ class BDsensorEndstopWrapper:
         ncount1 = 0
         while 1:
             intd = self.I2C_BD_send(CMD_READ_DATA, 1)
-            gcmd.respond_info("%d"%intd)
+            gcmd.respond_info("%d at %.1fmm"%(intd,ncount1/10.0))
             if ncount1 <= 3 and intd > 500:
                 gcmd.respond_raw("BDSensor mounted too high!"
                                  "0.4mm to 2.4mm from BED at"
@@ -1105,7 +1105,12 @@ class BDsensorEndstopWrapper:
         elif cmd_bd == -2:  # gcode M102 S-2 read distance data
             self.bd_distance(gcmd)
         elif cmd_bd == -7:
-            self.I2C_BD_send(CMD_DISTANCE_RAWDATA_TYPE)
+            self.I2C_BD_send(CMD_DISTANCE_RAWDATA_TYPE) 
+            strd = "Raw data:" + str(self.I2C_BD_send(CMD_READ_DATA, 1))
+            self.I2C_BD_send(CMD_DISTANCE_MODE)
+            self.bd_value = self.BD_Sensor_Read(1)
+            strd = strd + ",  Then we can calculate the distance by comparing to the calibration data:"+str(self.bd_value) + "mm"
+            gcmd.respond_raw(strd) 
             return
         elif cmd_bd == -8:
             self.I2C_BD_send(CMD_REBOOT_SENSOR)
