@@ -919,7 +919,7 @@ class BDsensorEndstopWrapper:
         if 'z' not in self.toolhead.get_status(curtime)['homed_axes']:
             raise self.printer.command_error("make sure [force_move]"
                                             " enable_force_move: true # in the printer.cfg")
-        self.toolhead.dwell(0.1)
+        self.toolhead.dwell(0.2)
         gcmd.respond_info("Please Wait... ")
         z_pos = 0
         ncount = 0
@@ -933,7 +933,7 @@ class BDsensorEndstopWrapper:
             # self.gcode.run_script_from_command("G91")
             # self.gcode.run_script_from_command("G1 Z+0.1 F1500")
             # self.gcode.run_script_from_command("G90")
-            self.toolhead.manual_move([None, None, z_pos], 100)
+            self.toolhead.manual_move([None, None, z_pos], 2)
             self.toolhead.wait_moves()
             self.toolhead.dwell(0.2)
             ncount = ncount + 1
