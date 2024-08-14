@@ -1271,7 +1271,7 @@ class BDsensorEndstopWrapper:
         pos_old = homepos[2]
         while 1:
             homepos[2] += up_steps
-            self.toolhead.manual_move([None, None, homepos[2]], 100)
+            self.toolhead.manual_move([None, None, homepos[2]], 2)
             self.toolhead.wait_moves()
             time.sleep(0.05)
             raw_d = self.I2C_BD_send(CMD_READ_DATA, 1)
@@ -1280,12 +1280,12 @@ class BDsensorEndstopWrapper:
                     break
                 pos_old_1 = homepos[2]
                 homepos[2] -= 0.1 # (up_steps*1.5)
-                self.toolhead.manual_move([None, None, homepos[2]], 100)
+                self.toolhead.manual_move([None, None, homepos[2]], 2)
                 self.toolhead.wait_moves()
                 intr = raw_d
                 while 1:
                     homepos[2] += second_steps
-                    self.toolhead.manual_move([None, None, homepos[2]], 100)
+                    self.toolhead.manual_move([None, None, homepos[2]], 1)
                     self.toolhead.wait_moves()
                     time.sleep(0.05)
                     raw_d = self.I2C_BD_send(CMD_READ_DATA, 1)
@@ -1299,8 +1299,8 @@ class BDsensorEndstopWrapper:
                                 temp, target = heaters.get_temp(self.printer.get_reactor().monotonic())
                             except Exception as e:
                                 pass
-                            self.gcode.respond_info("Collision: %.4f mm, Bed: %.1fC"
-                                                % (raw_d*0.004,temp))
+                            self.gcode.respond_info("Raw data:%d at 0 mm, BDsensor to bed: %.4f mm, Bed: %.1fC"
+                                                % (raw_d,raw_d*0.004,temp))
                         return homepos[2]-pos_old,raw_d-intr_old
                         break
                     intr = raw_d
@@ -1316,7 +1316,7 @@ class BDsensorEndstopWrapper:
         self.toolhead.set_position(homepos)
         while 1:
             homepos[2] -= down_steps
-            self.toolhead.manual_move([None, None, homepos[2]], 100)
+            self.toolhead.manual_move([None, None, homepos[2]], 2)
             self.toolhead.wait_moves()
             time.sleep(0.05)
             raw_d = self.I2C_BD_send(CMD_READ_DATA, 1)
