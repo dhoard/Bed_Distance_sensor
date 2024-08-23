@@ -76,6 +76,7 @@ class BDPrinterProbe:
         self.rapid_scan = False
         self.last_state = False
         self.last_z_result = 0.
+        self.homing_speed_tmp = 0
         self.gcode_move = self.printer.load_object(config, "gcode_move")
         # Infer Z position to move to during a probe
         if config.has_section('stepper_z'):
@@ -213,11 +214,22 @@ class BDPrinterProbe:
         if self.mcu_probe in endstops:
             self.mcu_probe.multi_probe_begin()
             self.multi_probe_pending = True
+            for i, rail in enumerate(rails):
+                if (self.mcu_probe.collision_homing == 1 
+                          and rail.homing_retract_dist == 0):
+                    self.homing_speed_tmp = rail.homing_speed
+                    rail.homing_speed = rail.second_homing_speed
+                    self.gcode.respond_info("Homing_speed at %.3f" % (rail.homing_speed))
 
     def _handle_home_rails_end(self, homing_state, rails):
         endstops = [es for rail in rails for es, name in rail.get_endstops()]
         if self.mcu_probe in endstops:
+            for i, rail in enumerate(rails):
+                if (self.homing_speed_tmp > rail.homing_speed
+                         and rail.homing_retract_dist == 0):
+                    rail.homing_speed = self.homing_speed_tmp
             self.multi_probe_end()
+            
 
     def _handle_command_error(self):
         try:
@@ -1043,6 +1055,10 @@ class BDsensorEndstopWrapper:
         cmd_bd = gcmd.get_float('COLLISION_CALIBRATING', None)
         if cmd_bd is not None:
             self.collision_calibrating = cmd_bd
+            return
+        cmd_bd = gcmd.get_float('POSITION_ENDSTOP', None)
+        if cmd_bd is not None:
+            self.position_endstop = cmd_bd
             return
 
     def BD_real_time(self, bd_height):
