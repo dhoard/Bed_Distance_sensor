@@ -26,9 +26,11 @@ Range: 4mm (for different metal the range should be different, the normal pei st
  . | hardware | firmware
 --- | --- |---  
 2022.6 | BDsensor VA, V1.0 | V1.0  
-2023.4 | BDsensor VB, V1.1, the connector is changed | V1.1, support self reboot
-2023.11 | BDsensor VB, V1.3, the mcu is changed from stc to stm32 | V1.2, firmware for stm32
-2024.2  |              |[Support nozzle collision sensing](https://github.com/markniu/Bed_Distance_sensor/wiki/Collision-sensing)
+2023.4 | BDsensor VB, V1.1, the connector was changed | V1.1, support self reboot
+2023.11 | BDsensor VB, V1.3, Upgrade the MCU to STM32 | V1.2, for stm32
+2024.2  |              |V1.2c, [Support nozzle collision sensing](https://github.com/markniu/Bed_Distance_sensor/wiki/Collision-sensing)
+2024.3  | BDsensorM V1.0             | V1.2c
+2024.7  | BDsensorM V1.1             |  V1.2c, [Pins order](https://github.com/markniu/Bed_Distance_sensor/issues/178#issuecomment-2319621934) are changed in EXP1 connector
 
 ### Software
  . | Marlin | Klipper
@@ -40,7 +42,7 @@ Distance display |:heavy_check_mark: | :heavy_check_mark:
 Can bus toolhead|No | :heavy_check_mark: 
 standby mode automatic while printing|:heavy_check_mark: | :heavy_check_mark: 
 [KAMP](https://github.com/kyleisah/Klipper-Adaptive-Meshing-Purging) Adaptive Meshing & Purging |No | :heavy_check_mark: 
-nozzle collision sensing|Coming soon  | :heavy_check_mark: 
+nozzle collision sensing|[Detail](https://github.com/markniu/Bed_Distance_sensor/wiki/Collision-sensing-for-Marlin):heavy_check_mark:  | :heavy_check_mark: 
 
 ### Benefit of Collision sensing
 1.  **Auto z offset calibration**.
